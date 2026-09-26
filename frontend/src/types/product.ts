@@ -4,6 +4,9 @@ export interface Category {
     id: number;
     name: string;
     type?: string; // 백엔드의 PRODUCT, BOARD 등의 타입 구분용 (선택적)
+    slug: string;  // [추가됨] 영문 식별자 추가!
+    soft_order: number; // [추가됨] 정렬 순서 추가!
+    is_visible: boolean; // [추가됨]
 }
 
 // [추가됨] 핵심 특징(Features) 1개에 대한 모양
@@ -33,6 +36,7 @@ export interface Product {
     description?: string;
     image_url?: string;
     catalog_url?: string;
+    is_featured: boolean;
     features?: ProductFeature[]; // [추가됨] 객체 배열
     specs?: ProductSpec[]; // [추가됨] 객체 배열
 

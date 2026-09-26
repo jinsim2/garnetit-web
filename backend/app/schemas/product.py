@@ -14,9 +14,10 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = None
     catalog_url: Optional[str] = None
     is_visible: Optional[bool] = True
-
-    # [추가됨] 관리자 맘대로 정할 수 있는 우선순위 번호!
     display_order: Optional[int] = 0
+
+    # [추가됨]
+    is_featured: Optional[bool] = False    
     
 class ProductCreate(ProductBase):
     pass

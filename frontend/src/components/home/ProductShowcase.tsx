@@ -1,37 +1,27 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-const PRODUCTS = [
-    {
-        id: "detail/1",
-        name: "AI 돔 카메라",
-        desc: "실내·외 전천후 지능형 영상 분석",
-        image: "/products/dome.png"
-    },
-    {
-        id: "detail/2",
-        name: "AI 블릿 카메라",
-        desc: "원거리 야간 및 악천후 최적화",
-        image: "/products/bullet.png"
-    },
-    {
-        id: "detail/3",
-        name: "지능형 PTZ 카메라",
-        desc: "360도 무사각 고해상도 집중 감시",
-        image: "/products/ptz.png"
-    },
-    {
-        id: "detail/4",
-        name: "엔터프라이즈 NVR",
-        desc: "대규모 영상 데이터 무중단 저장 및 분석",
-        image: "/products/nvr.png"
-    }
-];
+import type { Product } from "@/types/product";
+import { getProxyImageUrl } from "@/lib/utils"; // [추가됨] 도우미 함수 불러오기
 
 export default function ProductShowcase() {
+    // [추가됨] 백엔드 연동 로직
+    const [products, setProducts] = useState<Product[]>([]);
+
+    useEffect(() => {
+        // [수정됨] 전체 제품이 아니라, 관리자가 픽(Pick)한 메인 전시용 제품만 달라고 백엔드에 요청한다.
+        fetch("http://localhost:8000/api/v1/products/?is_featured=true")
+            .then(res => res.json())
+            .then(data => {
+                // 가져온 제품 중 최신 4개만 자른다. (디자인을 해치지 않기 위해)
+                setProducts(data.slice(0, 4));
+            })
+            .catch(err => console.error(err));
+    }, []);
+
     return (
         <section className="py-24 bg-slate-900 text-white">
             <div className="container mx-auto px-6 lg:px-12">
@@ -55,7 +45,8 @@ export default function ProductShowcase() {
 
                 {/* 💡 제품 그리드 영역 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {PRODUCTS.map((product) => (
+                    {/* 💡 [수정됨] 하드코딩 배열(PRODUCTS) 대신 백엔드에서 가져온 배열(products)을 맵핑! */}
+                    {products.map((product) => (
                         <Link href={`/product/${product.id}`} key={product.id} className="group cursor-pointer">
                             {/* 제품 이미지 박스 */}
                             <div className="relative h-64 bg-slate-800 rounded-2xl overflow-hidden mb-6 border border-slate-700 group-hover:border-[#C1121F]/50 transition-colors duration-300">
@@ -70,7 +61,7 @@ export default function ProductShowcase() {
                                 <div className="absolute inset-0 p-8 flex items-center justify-center">
                                     <div className="relative w-full h-full transform group-hover:scale-110 transition-transform duration-500">
                                         <Image
-                                            src={product.image}
+                                            src={getProxyImageUrl(product.image_url)} // 여기서 도우미 함수 사용!
                                             alt={product.name}
                                             fill
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
@@ -80,6 +71,12 @@ export default function ProductShowcase() {
                                             // 로드 성공 시에만 opacity-100으로 보이게 하는 트릭입니다.
                                             onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
                                         />
+                                        {/*<img
+                                            src={product.image_url || "/products/dome.png"}
+                                            alt={product.name}
+                                            className="w-full h-full object-contain drop-shadow-2xl opacity-0 transition-opacity duration-300"
+                                            onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
+                                        />*/}
                                     </div>
                                 </div>
                             </div>
@@ -89,7 +86,7 @@ export default function ProductShowcase() {
                                 {product.name}
                             </h3>
                             <p className="text-slate-400 text-sm">
-                                {product.desc}
+                                {product.description || product.model_number}
                             </p>
                         </Link>
                     ))}

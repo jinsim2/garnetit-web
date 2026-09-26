@@ -36,6 +36,7 @@ export default function NewProductPage() {
         procurementCode: "",
         description: "",
         displayOrder: "0", // [추가됨] 정렬 순서 기본값 0
+        isFeatured: "normal", // [추가됨] 기본값은 일반(normal)
     });
 
     // [추가됨] 동적 배열 상태 관리(초기값으로 빈 입력칸 1개씩 세팅)
@@ -149,6 +150,7 @@ export default function NewProductPage() {
                 image_url: imageUrl,
                 catalog_url: catalogUrl || null,
                 is_visible: formData.isVisible === "show", // "show"면 true, 아니면 false
+                is_featured: formData.isFeatured === "featured", // "feature"면 true, 아니면 false
 
                 // [수정됨] 문자열 쪼개기가 아니라 진짜 객체 배열을 그대로 전송!
                 // 단, 제목이나 라벨을 입력하지 않은 빈 칸은 filter로 무시한다.
@@ -229,7 +231,21 @@ export default function NewProductPage() {
                                 <option value="hide">숨김 (임시저장 상태)</option>
                             </select>
                         </div>
+                        {/* 💡 [새로 추가된 영역!] 메인 페이지 전시 여부 */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-700">⭐ 메인 쇼케이스 전시</label>
+                            <select
+                                name="isFeatured"
+                                value={formData.isFeatured}
+                                onChange={handleChange}
+                                className="w-full p-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white text-slate-800 transition-all"
+                            >
+                                <option value="normal">일반 (목록에만 노출)</option>
+                                <option value="featured">🔥 메인 전시 (홈페이지 1면에 노출)</option>
+                            </select>
+                        </div>
                     </div>
+
                     {/* 제품명 & 모델명 */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
@@ -453,6 +469,6 @@ export default function NewProductPage() {
                     </button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

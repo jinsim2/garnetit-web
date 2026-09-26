@@ -1,88 +1,47 @@
 "use client";
 
-//import { useState } from "react";
-// useState 대신 useParams를 쓴다.
+import { useState, useEffect } from "react"; // [추가됨] 데이터를 불러와서 담아둘 바구니
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, ShieldCheck, Network, Mic } from "lucide-react";
+import type { Product, Category } from "@/types/product"; // [추가됨] 글로벌 타입 임포트
 
-// --- 가짜 데이터 (Dummy Data) ---
-// 나중에 백엔드 API가 연결되면 이 부분을 fetch로 대체하면 된다!
-const categories = [
-    { id: "cctv", name: "영상감시장치", icon: ShieldCheck },
-    { id: "network", name: "네트워크 보안장비", icon: Network },
-    { id: "audio", name: "네트워크 방송장비", icon: Mic },
-];
-
-const dummyProducts = {
-    cctv: [
-        {
-            id: 1,
-            name: "GARNET Full-HD IR 돔 카메라",
-            model: "GCD-403020I-01",
-            desc: "어두운 환경에서도 선명한 Full-HD 화질과 IR 기술을 탑재하여 완벽한 실내외 감시를 지원합니다.",
-            features: ["Full-HD 해상도", "IP67 방수방진 & IK10 내충격"],
-            image: "/products/dome.png",
-        },
-        {
-            id: 2,
-            name: "GARNET Full HD IR 블릿 카메라(히터 내장)",
-            model: "GCB-403020I-01",
-            desc: "가혹한 날씨 속에서도 흔들림 없는 모니터링. 야간 가시거리 50m를 자랑하는 적외선(IR) 블릿 카메라입니다.",
-            features: ["Full-HD 해상도", "히터 내장 (영하 40도)", "IP67 방수방진"],
-            image: "/products/bullet.png",
-        },
-        {
-            id: 3,
-            name: "GARNET Full-HD 36배 라이트마스터 IR PTZ 카메라",
-            model: "GCP-3602I-01",
-            desc: "360도 무사각 고해상도 집중 감시. 스마트 PTZ 조작을 통해 정확하고 신속한 상황 파악이 가능합니다.",
-            features: ["Full-HD 해상도", "IP67 방수방진", "IK10 내충격"],
-            image: "/products/ptz.png",
-        },
-        {
-            id: 4,
-            name: "DirectIP 16채널 녹화기",
-            model: "GN-16C",
-            desc: "대규모 영상 데이터 무중단 저장 및 분석. 고성능 서버용 CPU를 탑재하여 안정적인 녹화 및 실시간 모니터링이 가능합니다.",
-            features: ["16채널 실시간 녹화", "실시간 모니터링", "RAID 1 지원"],
-            image: "/products/nvr.png",
-        }
-    ],
-    network: [
-        {
-            id: 5,
-            name: "AXGATE 차세대 통합 방화벽",
-            model: "AXGATE 7000S",
-            desc: "대규모 네트워크 환경을 위한 최고의 성능. 완벽한 위협 탐지 및 차단 성능을 제공하는 차세대 통합보안 시스템(NGFW).",
-            features: ["멀티코어 분산 처리 엔진", "랜섬웨어/악성코드 원천 차단", "고가용성(HA) 클러스터링"],
-            image: "/products/AXGATE_7000S.png",
-        }
-    ],
-    audio: [
-        {
-            id: 6,
-            name: "Onecast 네트워크 방송 서버 ",
-            model: "SBC-7200",
-            desc: "안전과 신뢰를 최우선으로 하는 방송 인프라 구축. 신뢰할 수 있는 네트워크 기반 방송 솔루션으로 재난 상황에서도 끊김 없는 소통을 보장합니다.",
-            features: ["PoE (전원 및 통신 통합)", "양방향 오디오 통신", "스케줄 및 TTS 방송 지원"],
-            image: "/products/AGT-7200.png",
-        }
-    ]
-};
+// [추가됨] 백엔드 카테고리(Slug) 이름에 맞춰 아이콘을 맵핑해주는 딕셔너리
+const CATEGORY_ICONS: Record<string, any> = {
+    "cctv": ShieldCheck,
+    "network": Network,
+    "audio": Mic,
+}
 
 export default function ProductPage() {
-    // 현재 선택된 탭을 기억하는 상태 (기본값: cctv)
-    // const [activeTab, setActiveTab] = useState("cctv");
 
-    // 1. 주소창에서 [category] 글자를 쏙 빼온다. (예: 주소가 /product/network 면 "network"를 가져옴)
+    // 주소창에서 [category] 글자를 쏙 빼온다. (예: 주소가 /product/network 면 "network"를 가져옴)
     const params = useParams();
-    const activeCategory = (params.category as string) || "cctv";
+    const activeCategory = params.category as string;
 
-    // 2. 주소창 글자에 맞는 제품 리스트를 꺼낸다.
-    // 만약 이상한 주소(/product/ass)를 치고 들어오면 기본값(cctv) 데이터나 빈 배열은 준다.
-    const currentProducts = dummyProducts[activeCategory as keyof typeof dummyProducts] || dummyProducts.cctv;
+    // [추가됨] 백엔드에서 가져온 진짜 데이터를 담을 바구니(State)
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // [추가됨] 화면이 켜지거나 카테고리 탭(slug)이 바뀔 때마다 백엔드에 요청!
+    useEffect(() => {
+        // 1. 최상단 메뉴를 그리기 위해 카테고리 목록 가져오기
+        fetch("http://localhost:8000/api/v1/categories/?is_visible=true")
+            .then(res => res.json())
+            .then(data => setCategories(data));
+
+        // 2. 주소창의 slug("cctv")를 백엔드에 던져서, 해당 카테고리 제품만 쏙 가져오기!
+        if (activeCategory) {
+            setIsLoading(true);
+            fetch(`http://localhost:8000/api/v1/products/?category_slug=${activeCategory}`)
+                .then(res => res.json())
+                .then(data => setProducts(data))
+                .finally(() => setIsLoading(false));
+        }
+
+    }, [activeCategory]);
 
     // 탭 클릭 시 상태 변경 + 부드러운 스크롤!
     const handleTabClick = () => {
@@ -125,13 +84,20 @@ export default function ProductPage() {
                 <div className="container mx-auto max-w-6xl px-6 lg:px-12">
                     <div className="flex overflow-x-auto hide-scrollbar gap-8 md:justify-center">
                         {categories.map((category) => {
-                            const isActive = activeCategory === category.id;
-                            const Icon = category.icon;
+                            // categories 테이블에서 type 컬럼의 값이 "PRODUCT" 인 것만 필터링
+                            if (category.type !== "PRODUCT") return null;
+
+                            // [수정됨] id 비교 -> slug 비교로 변경, Icon 맵핑 방식 변경
+                            // [방어 코드] 나중에 관리자에서 아이콘 맵핑이 안 된 새 카테고리를 만들면
+                            // 에러가 나지 않도록 기본값(|| ShieldCheck)을 준다.
+                            const isActive = activeCategory === category.slug;
+                            const Icon = CATEGORY_ICONS[category.slug] || ShieldCheck;
+
                             return (
                                 // button 대신 Link로 변경하고, href로 이동시킨다.
                                 <Link
                                     key={category.id}
-                                    href={`/product/${category.id}`}
+                                    href={`/product/${category.slug}`}
                                     scroll={false} // Next.js의 뚝 끊기는 스크롤 방지!
                                     onClick={handleTabClick} // 부드러운 스크롤 실행!
                                     // 모바일 반응형 적용 text-sm, py-4 등으로 줄이되, PC(md:)에서는 원래 크기를 유지한다.
@@ -152,7 +118,7 @@ export default function ProductPage() {
             {/* 3. 대형 교차(지그재그) 쇼케이스 영역 */}
             <section className="py-20 px-6 lg:px-12">
                 <div className="container mx-auto max-w-6xl space-y-32">
-                    {currentProducts.map((product, index) => {
+                    {products.map((product, index) => {
                         // 짝수 번째 인덱스(0, 2, 4...)는 이미지가 왼쪽, 홀수 번째는 오른쪽으로 강제 지정
                         const isImageLeft = index % 2 === 0;
 
@@ -167,7 +133,7 @@ export default function ProductPage() {
                                     <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl bg-white group">
                                         {/* Next.js의 Image 컴포넌트로 외부 이미지를 가져올 땐 외부 링크 허용 설정이 필요하지만, 여기선 Vercel 시연을 위해 Unsplash 임시 이미지를 썼습니다. 혹시 에러가 난다면 <img /> 태그로 임시 교체하셔도 됩니다! */}
                                         <img
-                                            src={product.image}
+                                            src={product.image_url || "/products/dome.png"}
                                             alt={product.name}
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                                             className="w-full h-full object-contain p-8 md:p-12 transition-transform duration-700 group-hover:scale-105"
@@ -179,22 +145,20 @@ export default function ProductPage() {
 
                                 {/* 텍스트 영역 (제품명, 스펙, 버튼) */}
                                 <div className="w-full lg:w-1/2 space-y-6">
+                                    {/* [수정됨] 모델명 대신 제품 한 줄 설명(description) 렌더링 */}
                                     <div className="inline-block px-3 py-1 bg-slate-100 text-slate-600 font-medium text-sm rounded-full">
-                                        {product.model}
+                                        {product.description || product.model_number}
                                     </div>
                                     <h2 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
                                         {product.name}
                                     </h2>
-                                    <p className="text-lg text-slate-600 leading-relaxed">
-                                        {product.desc}
-                                    </p>
 
-                                    {/* 핵심 스펙 리스트 */}
+                                    {/* [수정됨] 객체 배열로 업그레이드 된 특징(features) 렌더링 */}
                                     <ul className="space-y-3 py-4 border-y border-slate-100">
-                                        {product.features.map((feature, i) => (
+                                        {product.features?.map((feature, i) => (
                                             <li key={i} className="flex items-center gap-3 text-slate-700 font-medium">
                                                 <div className="w-2 h-2 rounded-full bg-[#C1121F]"></div>
-                                                {feature}
+                                                {feature.title} {/* 객체 안의 title만 꺼내서 보여준다! */}
                                             </li>
                                         ))}
                                     </ul>

@@ -21,6 +21,9 @@ class Product(Base):
     # [추가됨] 프론트 화면 노출 정렬 순서(숫자가 클수록, 혹은 작을수록 우선순위)
     display_order = Column(Integer, default=0)
 
+    # [추가됨] 관리자가 메인 화면 전시에 체크했는지 여부를 기억하는 스위치(T/F)
+    is_featured = Column(Boolean, default=False)
+
     # [시간 관리 필드 추가]
     # 데이터가 처음 생길 때 현재 시간을 자동 기록
     created_at = Column(DateTime(timezone=True), server_default=func.now())

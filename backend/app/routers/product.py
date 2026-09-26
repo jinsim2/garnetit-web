@@ -24,6 +24,8 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
 @router.get("/", response_model=List[schemas.ProductResponse])
 def read_products(
     category_id: Optional[int] = None,
+    category_slug: Optional[str] = None, # 💡 [추가됨] slug(영문)로 검색할 수 있는 파라미터 추가!
+    is_featured: Optional[bool] = None, # [추가됨] 메인 전시용 제품만 찾아줘!
     keyword: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
@@ -34,6 +36,11 @@ def read_products(
     if category_id is not None:
         query = query.filter(models.Product.category_id == category_id)
 
+    # [추가됨!] 1.5단계 필터: 카테고리 Slug (사용자 홈페이지용)
+    # Products 테이블에는 slug가 없으므로, Category 테이블을 연결(Join)해서 slug가 일치하는지 확인!
+    if category_slug is not None:
+        query = query.join(models.Category).filter(models.Category.slug == category_slug)
+
     # 2단계 필터: 검색어를 입력했을 때 (이름이나 모델명에 포함되어 있으면 다 찾아줌)
     if keyword:
         # ilike는 대소문자 구별 없이 포함된 글자를 다 찾아주는 마법의 키워드이다.
@@ -41,6 +48,10 @@ def read_products(
             (models.Product.name.ilike(f"%{keyword}%")) | 
             (models.Product.model_number.ilike(f"%{keyword}%"))
         )
+
+    # [추가됨] 2.5단계 필터: 전시 여부(is_featured)를 물어봤다면, 일치하는 것만 찾기
+    if is_featured is not None:
+        query = query.filter(models.Product.is_featured == is_featured)
 
     # [추가됨] 3단계 정렬: 1순위(display_order 오름차순), 2순위(최신순 내림차순)
     query = query.order_by(

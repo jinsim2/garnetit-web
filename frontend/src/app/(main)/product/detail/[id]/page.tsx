@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react"; // [추가됨]
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Download, Mail, CheckCircle2, Shield, Zap, Settings, Eye } from "lucide-react";
+// [수정됨] DB에 저장된 아이콘 문자열("Check", "Eye" 등)을 실제 아이콘으로 바꿔주기 위해 다 불러온다.
+import { ArrowLeft, Download, Mail, Check, Eye, Zap, Shield, Settings, Server, Video, Wifi, Loader2 } from "lucide-react";
 
 import {
     Table,
@@ -10,67 +12,61 @@ import {
     TableCell,
     TableRow,
 } from "@/components/ui/table";
+import type { Product } from "@/types/product";  // [추가됨] 타입 불러오기
 
-// --- 상세 페이지용 가짜 데이터 (Dummy Data) ---
-// 실제 DB가 연결되면 이 부분은 지워지고 fetch API로 대체됩니다.
-const detailedProducts = {
-    // ID 1번: CCTV 돔 카메라 예시
-    "1": {
-        id: "1",
-        name: "GARNET Full-HD IR 돔 카메라",
-        model: "GCD-403020I-01",
-        desc: "어두운 환경에서도 선명한 Full-HD 화질과 IR 기술을 탑재하여 완벽한 실내외 감시를 지원합니다.",
-        image: "/products/dome.png",
-        category: "cctv",
-        features: [
-            { icon: Eye, title: "Full-HD 고해상도", desc: "1920x1080 해상도로 또렷한 객체 식별이 가능합니다." },
-            { icon: Zap, title: "스마트 IR 기술", desc: "빛이 전혀 없는 야간에도 최대 30m 가시거리를 확보합니다." },
-            { icon: Shield, title: "강력한 내구성", desc: "IP67 방수방진 및 IK10 내충격 인증을 획득하여 실외 환경에서도 안전합니다." },
-            { icon: Settings, title: "PoE 지원", desc: "랜선 하나로 전원과 데이터를 동시에 전송하여 시공이 간편합니다." }
-        ],
-        specs: [
-            { label: "이미지 센서", value: "1/2.8\" 2MP CMOS" },
-            { label: "최대 해상도", value: "1920 x 1080 @ 30fps" },
-            { label: "초점 거리", value: "2.8mm / 4.0mm 고정 초점 렌즈" },
-            { label: "최저 조도", value: "Color: 0.01 Lux / B&W: 0 Lux (IR LED On)" },
-            { label: "비디오 압축", value: "H.265, H.264, MJPEG" },
-            { label: "네트워크 통신", value: "10/100 Mbps Ethernet, PoE (IEEE802.3af)" },
-            { label: "동작 온도/습도", value: "-30°C ~ 60°C / 95% RH 이하" }
-        ]
-    },
-    // ID 5번: 엑스게이트 방화벽 예시
-    "5": {
-        id: "5",
-        name: "AXGATE 차세대 통합 방화벽",
-        model: "AXGATE 7000S",
-        desc: "대규모 네트워크 환경을 위한 최고의 성능. 완벽한 위협 탐지 및 차단 성능을 제공하는 차세대 통합보안 시스템(NGFW).",
-        image: "/products/AXGATE_7000S.png",
-        category: "network",
-        features: [
-            { icon: Shield, title: "강력한 방화벽 성능", desc: "최대 40Gbps의 방화벽 처리 성능을 제공합니다." },
-            { icon: Zap, title: "멀티코어 분산 처리", desc: "독자적인 분산 처리 기술로 트래픽 병목 현상을 제거합니다." },
-            { icon: CheckCircle2, title: "랜섬웨어 원천 차단", desc: "알려지지 않은 신종 악성코드 및 랜섬웨어를 사전에 탐지합니다." },
-            { icon: Settings, title: "고가용성(HA)", desc: "시스템 장애 시에도 무중단 서비스를 보장하는 이중화 기능을 지원합니다." }
-        ],
-        specs: [
-            { label: "방화벽 처리 성능", value: "40 Gbps" },
-            { label: "VPN 처리 성능", value: "15 Gbps" },
-            { label: "IPS 처리 성능", value: "10 Gbps" },
-            { label: "최대 동시 연결 수", value: "8,000,000 Sessions" },
-            { label: "네트워크 인터페이스", value: "8 x 1GbE (RJ45), 4 x 10GbE (SFP+)" },
-            { label: "전원 공급 장치", value: "Redundant Power Supply (이중화)" },
-            { label: "외형 크기 (장비)", value: "2U 랙마운트 사이즈" }
-        ]
-    },
+// [추가됨] 백엔드에서 온 글자(string)를 진짜 아이콘 컴포넌트로 변환해 주는 마법의 사전
+const ICON_MAP: Record<string, any> = {
+    "Check": Check,
+    "Eye": Eye,
+    "Zap": Zap,
+    "Shield": Shield,
+    "Settings": Settings,
+    "Download": Download,
+    "Video": Video,
+    "Wifi": Wifi,
 };
+
 
 export default function ProductDetailPage() {
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
 
-    // 시연용 가짜 데이터 가져오기 (만약 매칭되는 ID가 없으면 1번 데이터를 보여줍니다)
-    const product = detailedProducts[id as keyof typeof detailedProducts] || detailedProducts["1"];
+    // [추가됨] 백엔드에서 가져온 진짜 '단 1개의 제품'을 담을 바구니
+    const [product, setProduct] = useState<Product | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // [추가됨] 화면이 커지면 주소창의 ID를 백엔드에 던져서 제품을 찾아온다!
+    useEffect(() => {
+        if (!id) return;
+
+        setIsLoading(true);
+        fetch(`http://localhost:8000/api/v1/products/${id}`)
+            .then(res => {
+                if (!res.ok) {
+                    alert("삭제되었거나 존재하지 않는 제품입니다.");
+                    router.back();
+                    throw new Error("제품을 찾을 수 없습니다.");
+                }
+                return res.json();
+            })
+            .then(data => setProduct(data))
+            .catch(err => console.error(err))
+            .finally(() => setIsLoading(false));
+
+    }, [id, router]);
+
+    // 데이터를 가져오는 동안에는 로딩 뺑뺑이를 보여준다.
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex itmes-center jsutify-center bg-slate-50">
+                <Loader2 className="animate-spin text-slate-400" size={32} />
+            </div>
+        );
+    }
+
+    // 만약 제품이 없다면 빈 화면을 보여준다.
+    if (!product) return null;
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
@@ -96,7 +92,7 @@ export default function ProductDetailPage() {
                         <div className="w-full lg:w-1/2">
                             <div className="relative aspect-square md:aspect-[4/3] bg-slate-50 rounded-3xl overflow-hidden p-12 flex items-center justify-center border border-slate-100 group">
                                 <img
-                                    src={product.image}
+                                    src={product.image_url || "/products/dome.png"}
                                     alt={product.name}
                                     className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                                 />
@@ -107,13 +103,13 @@ export default function ProductDetailPage() {
                         <div className="w-full lg:w-1/2 space-y-8">
                             <div>
                                 <span className="inline-block px-4 py-1.5 bg-slate-100 text-slate-700 font-bold tracking-wider text-sm rounded-full mb-4">
-                                    {product.model}
+                                    {product.model_number} {/* 모델명 */}
                                 </span>
                                 <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-6">
                                     {product.name}
                                 </h1>
                                 <p className="text-lg text-slate-600 leading-relaxed">
-                                    {product.desc}
+                                    {product.description} {/* 상세 설명 */}
                                 </p>
                             </div>
 
@@ -126,13 +122,29 @@ export default function ProductDetailPage() {
                                     <Mail size={20} />
                                     도입 문의하기
                                 </Link>
-                                <button
-                                    className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 hover:border-[#C1121F] py-4 px-6 rounded-xl font-bold text-lg transition-colors"
-                                    onClick={() => alert("해당 제품의 PDF 카탈로그 다운로드가 시작됩니다! (시연용)")}
-                                >
-                                    <Download size={20} />
-                                    카탈로그 다운로드
-                                </button>
+                                {/* 💡 [트렌디한 방식] 카탈로그가 있으면 a 태그(버튼 모양), 없으면 비활성화된 버튼을 보여줍니다. */}
+                                {product.catalog_url ? (
+                                    <a
+                                        href={product.catalog_url}
+                                        target="_blank" // 새 창에서 열기 (선택)
+                                        rel="noopener noreferrer"
+                                        download // 다운로드 속성 부여
+                                        className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 hover:border-[#C1121F] py-4 px-6 rounded-xl font-bold text-lg transition-colors"
+                                    >
+                                        <Download size={20} />
+                                        카탈로그 다운로드
+                                    </a>
+                                ) : (
+                                    <button
+                                        disabled
+                                        className="flex-1 flex items-center justify-center gap-2 bg-slate-50 text-slate-400 border-2 border-slate-200 py-4 px-6 rounded-xl font-bold text-lg cursor-not-allowed"
+                                        onClick={() => alert("등록된 카탈로그가 없습니다.")}
+                                    >
+                                        <Download size={20} />
+                                        카탈로그 준비중
+                                    </button>
+                                )}
+
                             </div>
                         </div>
                     </div>
@@ -148,8 +160,11 @@ export default function ProductDetailPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {product.features.map((feature, idx) => {
-                            const Icon = feature.icon;
+                        {/* 💡 [수정됨] 객체 배열 맵핑 및 아이콘 동적 변환 */}
+                        {product.features?.map((feature, idx) => {
+                            // DB에 저장된 아이콘 이름("Check")을 실제 루시드 아이콘 컴포넌트로 변환!
+                            // 만약 맵핑이 안 되면 기본값으로 Check 아이콘을 띄움.
+                            const Icon = ICON_MAP[feature.icon] || Check;
                             return (
                                 <div key={idx} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex items-start gap-6">
                                     <div className="p-4 bg-slate-50 text-[#C1121F] rounded-xl flex-shrink-0">
@@ -177,7 +192,8 @@ export default function ProductDetailPage() {
                     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                         <Table>
                             <TableBody>
-                                {product.specs.map((spec, idx) => (
+                                {/* 💡 [수정됨] 기술 스펙 동적 맵핑 */}
+                                {product.specs?.map((spec, idx) => (
                                     <TableRow key={idx}>
                                         <TableCell className="w-1/3 py-5 px-6 lg:px-8 bg-slate-50/50 font-semibold text-slate-700 border-r border-slate-100">
                                             {spec.label}
