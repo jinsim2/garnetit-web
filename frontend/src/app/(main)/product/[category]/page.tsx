@@ -28,14 +28,14 @@ export default function ProductPage() {
     // [추가됨] 화면이 켜지거나 카테고리 탭(slug)이 바뀔 때마다 백엔드에 요청!
     useEffect(() => {
         // 1. 최상단 메뉴를 그리기 위해 카테고리 목록 가져오기
-        fetch("http://localhost:8000/api/v1/categories/?is_visible=true")
+        fetch("/api/v1/categories/?is_visible=true")
             .then(res => res.json())
             .then(data => setCategories(data));
 
         // 2. 주소창의 slug("cctv")를 백엔드에 던져서, 해당 카테고리 제품만 쏙 가져오기!
         if (activeCategory) {
             setIsLoading(true);
-            fetch(`http://localhost:8000/api/v1/products/?category_slug=${activeCategory}`)
+            fetch(`/api/v1/products/?category_slug=${activeCategory}`)
                 .then(res => res.json())
                 .then(data => setProducts(data))
                 .finally(() => setIsLoading(false));

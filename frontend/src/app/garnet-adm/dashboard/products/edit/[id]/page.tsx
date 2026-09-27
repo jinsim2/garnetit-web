@@ -59,13 +59,13 @@ export default function EditProductPage() {
     // [최초 1회 실행] 백엔드에서 카테고리 목록을 가져온다.
     useEffect(() => {
         // 1. 카테고리 목록 가져오기 (기존과 동일)
-        fetch("http://localhost:8000/api/v1/categories/")
+        fetch("/api/v1/categories/")
             .then(res => res.json())
             .then(data => setCategories(data));
 
         // 2. [추가됨] productId가 있으면 백엔드에서 해당 제품 정보 가져오기
         if (productId) {
-            fetch(`http://localhost:8000/api/v1/products/${productId}`)
+            fetch(`/api/v1/products/${productId}`)
                 .then(res => res.json())
                 .then(data => {
                     // 백엔드에서 받은 데이터를 폼 상태에 쏙쏙 채워넣기
@@ -164,7 +164,7 @@ export default function EditProductPage() {
             if (thumbnailFile) {
                 const imageFormData = new FormData();
                 imageFormData.append("file", thumbnailFile);
-                const imageRes = await fetch("http://localhost:8000/api/v1/upload/", {
+                const imageRes = await fetch("/api/v1/upload/", {
                     method: "POST",
                     body: imageFormData
                 });
@@ -176,7 +176,7 @@ export default function EditProductPage() {
             if (catalogFile) {
                 const catalogFormData = new FormData();
                 catalogFormData.append("file", catalogFile);
-                const catalogRes = await fetch("http://localhost:8000/api/v1/upload/", { // 뒤에 슬래시(/) 주의
+                const catalogRes = await fetch("/api/v1/upload/", { // 뒤에 슬래시(/) 주의
                     method: "POST",
                     body: catalogFormData
                 });
@@ -203,7 +203,7 @@ export default function EditProductPage() {
             };
             // STEP 4: 폼 전송! (나머지는 기존과 동일)
             const token = localStorage.getItem('admin_token');
-            const submitRes = await fetch(`http://localhost:8000/api/v1/products/${productId}`, {
+            const submitRes = await fetch(`/api/v1/products/${productId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

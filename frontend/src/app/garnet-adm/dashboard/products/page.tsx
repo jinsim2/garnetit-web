@@ -18,7 +18,7 @@ export default function ProductsPage() {
     // 컴포넌트가 처음 열릴 때 실행
     useEffect(() => {
         // 1. 카테고리 목록을 가져온다. (category_id를 '이름'으로 변환하기 위해 필요)
-        fetch("http://localhost:8000/api/v1/categories/")
+        fetch("/api/v1/categories/")
             .then(res => res.json())
             .then(data => setCategories(data))
             .catch(err => console.error(err));
@@ -31,7 +31,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch("http://localhost:8000/api/v1/products/");
+            const res = await fetch("/api/v1/products/");
             const data = await res.json();
             setProducts(data);
         } catch (error) {
@@ -56,7 +56,7 @@ export default function ProductsPage() {
             // [추가됨] 로컬 스토리지에서 출입증(토큰) 꺼내기
             const token = localStorage.getItem('admin_token');
 
-            const res = await fetch(`http://localhost:8000/api/v1/products/${productId}`, {
+            const res = await fetch(`/api/v1/products/${productId}`, {
                 method: "DELETE",
                 headers: {
                     // [추가됨] 헤더에 토큰 달아서 보내기

@@ -1,16 +1,60 @@
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: garnet_db
+  # 1. 무인 경비원 (자동 HTTPS)
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+  # 2. 프론트엔드
+  frontend:
+    build: ./frontend
     restart: always
     environment:
-      POSTGRES_USER: garnet
-      POSTGRES_PASSWORD: Rkspt12#$
-      POSTGRES_DB: garnet_db
-    ports:
-      - "5432:5432"
+      # 💡 도커 내부망에서는 백엔드 주소가 'http://backend:8000' 이 됩니다!
+      - BACKEND_URL=http://backend:8000
+  # 3. 백엔드
+  backend:
+    build: ./backend
+    restart: always
+    environment:
+      # 💡 도커 내부망에서는 데이터베이스 주소가 'db'가 됩니다!
+      - DATABASE_URL=postgresql://garnetadmin:garnetpass123!@db:5432/garnetdb
     volumes:
+      # 💡 회원님이 업로드할 사진들이 서버가 꺼져도 안 날아가게 보존
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+  # 4. 데이터베이스 (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=garnetadmin
+      - POSTGRES_PASSWORD=garnetpass123!
+      - POSTGRES_DB=garnetdb
+    volumes:
+      # 💡 데이터베이스 영구 보존
       - postgres_data:/var/lib/postgresql/data
 
+  # 5. 모니터링 관리툴 (옵션이지만 매우 유용함)
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: always
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
+  portainer_data:

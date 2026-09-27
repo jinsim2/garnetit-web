@@ -13,7 +13,7 @@ export default function ProductShowcase() {
 
     useEffect(() => {
         // [수정됨] 전체 제품이 아니라, 관리자가 픽(Pick)한 메인 전시용 제품만 달라고 백엔드에 요청한다.
-        fetch("http://localhost:8000/api/v1/products/?is_featured=true")
+        fetch("/api/v1/products/?is_featured=true")
             .then(res => res.json())
             .then(data => {
                 // 가져온 제품 중 최신 4개만 자른다. (디자인을 해치지 않기 위해)

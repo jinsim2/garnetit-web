@@ -41,7 +41,7 @@ export default function ProductDetailPage() {
         if (!id) return;
 
         setIsLoading(true);
-        fetch(`http://localhost:8000/api/v1/products/${id}`)
+        fetch(`/api/v1/products/${id}`)
             .then(res => {
                 if (!res.ok) {
                     alert("삭제되었거나 존재하지 않는 제품입니다.");

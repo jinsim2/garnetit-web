@@ -1,0 +1,12 @@
+# 💡 구입하신 실제 도메인 주소 입력! (자동으로 HTTPS 발급)
+garnet2014.cafe24.com {
+    # 1. /api/* 로 들어오는 요청은 백엔드 컨테이너(포트 8000)로 쏙!
+    handle_path /api/* {
+        reverse_proxy backend:8000
+    }
+    
+    # 2. 그 외 모든 사용자 접속은 프론트엔드 컨테이너(포트 3000)로 쏙!
+    handle {
+        reverse_proxy frontend:3000
+    }
+}

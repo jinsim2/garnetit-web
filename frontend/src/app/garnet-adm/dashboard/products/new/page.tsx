@@ -54,7 +54,7 @@ export default function NewProductPage() {
 
     // [최초 1회 실행] 백엔드에서 카테고리 목록을 가져온다.
     useEffect(() => {
-        fetch("http://localhost:8000/api/v1/categories/")
+        fetch("/api/v1/categories/")
             .then(res => res.json())
             .then(data => {
                 // 'PRODUCT' 타입인 카테고리만 골라서 세팅
@@ -120,7 +120,7 @@ export default function NewProductPage() {
             const imageFormData = new FormData();
             imageFormData.append("file", thumbnailFile);
 
-            const imageRes = await fetch("http://localhost:8000/api/v1/upload/", {
+            const imageRes = await fetch("/api/v1/upload/", {
                 method: "POST",
                 body: imageFormData
             });
@@ -132,7 +132,7 @@ export default function NewProductPage() {
             if (catalogFile) {
                 const catalogFormData = new FormData();
                 catalogFormData.append("file", catalogFile);
-                const catalogRes = await fetch("http://localhost:8000/api/v1/upload", {
+                const catalogRes = await fetch("/api/v1/upload", {
                     method: "POST",
                     body: catalogFormData
                 });
@@ -162,7 +162,7 @@ export default function NewProductPage() {
             // STEP 4: 최종 포장된 JSON 데이터를 제품 등록 API로 보내기!
             const token = localStorage.getItem('admin_token'); // 토큰 꺼내기
 
-            const submitRes = await fetch("http://localhost:8000/api/v1/products/", {
+            const submitRes = await fetch("/api/v1/products/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
