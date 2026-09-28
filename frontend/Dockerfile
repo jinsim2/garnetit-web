@@ -1,5 +1,5 @@
 # 1단계: 빌드(Build) 용도
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -12,7 +12,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # 2단계: 실제 실행(Runner) 용도
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 # 보안을 위해 일반 사용자 계정(root가 아닌) 생성
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
