@@ -2,8 +2,12 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
+
+# [추가됨] Next.js 원격 데이터 수집 기능 끄기(빌드 속도 향상)
+ENV NEXT_TELEMETRY_DISABLED=1
+
 # 💡 Phase 1에서 설정한 standalone 모드로 뼈대만 남기고 압축 빌드!
 RUN npm run build
 
