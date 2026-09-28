@@ -36,6 +36,8 @@ services:
   db:
     image: postgres:15-alpine
     restart: always
+    ports:
+      - "5432:5432" # 💡 외부 PC에서 접속 가능하게 문 열기(없으면 절대 못 들어감)
     environment:
       - POSTGRES_USER=garnetadmin
       - POSTGRES_PASSWORD=garnetpass123!
