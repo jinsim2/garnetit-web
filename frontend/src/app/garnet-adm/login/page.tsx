@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
             formData.append("password", password); // 비밀번호를 'password' 키값으로 넣는다.
 
             // 3. 백엔드로 로그인 요청을 보낸다.
-            const res = await fetch("http://127.0.0.1:8000/api/v1/auth/login", {
+            const res = await fetch("/api/v1/auth/login", {
                 method: "POST",
                 headers: { "content-type": "application/x-www-form-urlencoded" },
                 body: formData.toString(),

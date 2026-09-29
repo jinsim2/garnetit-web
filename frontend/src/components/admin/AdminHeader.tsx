@@ -44,7 +44,7 @@ export default function AdminHeader() {
             if (!token) return;
 
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/v1/users/me", {
+                const res = await fetch("/api/v1/users/me", {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (res.ok) {
