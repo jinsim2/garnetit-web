@@ -69,7 +69,7 @@ export default function AdminLoginPage() {
                             type="email"
                             required
                             className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#C1121F]"
-                            placeholder="admin@garnetit.co.kr"
+                            placeholder="이메일 주소를 입력하세요"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
