@@ -160,6 +160,26 @@ export default function HeroSection() {
                 </div>
             </div>
 
+            {/* 💡 4. 마우스 스크롤 인디케이터 (한화비전 스타일) */}
+            <div
+                className="absolute bottom-8 lg:bottom-[240px] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
+                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+            >
+                {/* 마우스 외곽선 (알약 모양) */}
+                <div className="w-[28px] h-[44px] rounded-full border-2 border-white/40 flex justify-center p-1">
+                    {/* 마우스 휠 (Framer Motion으로 위아래 바운스 애니메이션 적용) */}
+                    <motion.div
+                        animate={{ y: [0, 12, 0] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        className="w-1.5 h-1.5 bg-white rounded-full"
+                    />
+                </div>
+                {/* 텍스트 라벨 */}
+                <span className="text-white/60 text-[10px] font-bold uppercase tracking-[0.3em]">
+                    Scroll
+                </span>
+            </div>
+
         </section>
     );
 }
