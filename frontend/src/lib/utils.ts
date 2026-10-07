@@ -12,10 +12,14 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:800
 export function getProxyImageUrl(url: string | undefined | null) {
   if (!url) return "/products/dome.png"; // 기본 이미지
 
-  // 만약 URL이 로컬 백엔드 주소로 시작한다면?
-  if (url.startsWith(`${BACKEND_URL}/uploads/`)) {
-    // 프록시 터널 주소로 글자만 싹 바꿔치기 합니다!
-    return url.replace(`${BACKEND_URL}/uploads/`, "/backend-uploads/");
+  // 1. 정상적인 상대 경로로 들어온 경우 (Best Case)
+  if (url.startsWith("/uploads/")) {
+    return url.replace("/uploads/", "/backend-uploads/");
+  }
+  // 2. 만약의 사태를 대비한 방어 로직 (기존 localhost 데이터가 남아있을 경우)
+  if (url.includes("localhost:8000/uploads/")) {
+    // 도메인을 잘라내고 프록시 주소로 바꾼다
+    return url.split("localhost:8000")[1].replace("/uploads/", "/backend-uploads/");
   }
 
   return url;
