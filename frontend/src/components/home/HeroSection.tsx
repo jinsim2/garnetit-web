@@ -60,7 +60,7 @@ export default function HeroSection() {
                 autoPlay loop muted playsInline
                 className="absolute inset-0 w-full h-full object-cover z-0"
             >
-                <source src="/videos/land_01.mp4" type="video/mp4" />
+                <source src="/videos/land_02.mp4" type="video/mp4" />
             </video>
 
             {/* 비디오 텍스트 가독성을 위한 기본 50% 어두운 오버레이 */}

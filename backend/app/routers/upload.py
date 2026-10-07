@@ -24,6 +24,6 @@ async def upload_file(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     # 2. 프론트엔드가 이 파일을 열어볼 수 있는 URL을 반환한다.
-    file_url = f"http://localhost:8000/uploads/{unique_filename}"
+    file_url = f"/uploads/{unique_filename}"
 
     return {"url": file_url}
