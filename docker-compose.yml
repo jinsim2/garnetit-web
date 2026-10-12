@@ -11,42 +11,68 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
   # 2. 프론트엔드
   frontend:
     build: ./frontend
     restart: always
     environment:
-      # 💡 도커 내부망에서는 백엔드 주소가 'http://backend:8000' 이 됩니다!
       - BACKEND_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      # Alpine Linux에 기본 내장된 wget으로 3000번 포트 정상 응답 확인
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 > /dev/null || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
   # 3. 백엔드
   backend:
     build: ./backend
     restart: always
     environment:
-      # 💡 도커 내부망에서는 데이터베이스 주소가 'db'가 됩니다!
       - DATABASE_URL=postgresql://garnetadmin:garnetpass123!@db:5432/garnetdb
     volumes:
-      # 💡 회원님이 업로드할 사진들이 서버가 꺼져도 안 날아가게 보존
       - ./backend/uploads:/app/uploads
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      # python slim 이미지에는 curl이 없을 수 있으므로 파이썬 내장 urllib로 8000번 포트 확인
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\" || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
   # 4. 데이터베이스 (PostgreSQL)
   db:
     image: postgres:15-alpine
     restart: always
     ports:
-      - "5432:5432" # 💡 외부 PC에서 접속 가능하게 문 열기(없으면 절대 못 들어감)
+      - "5432:5432"
     environment:
       - POSTGRES_USER=garnetadmin
       - POSTGRES_PASSWORD=garnetpass123!
       - POSTGRES_DB=garnetdb
     volumes:
-      # 💡 데이터베이스 영구 보존
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      # PostgreSQL 공식 헬스체크 명령어
+      test: ["CMD-SHELL", "pg_isready -U garnetadmin -d garnetdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
-  # 5. 모니터링 관리툴 (옵션이지만 매우 유용함)
+  # 5. 모니터링 관리툴 (옵션)
   portainer:
     image: portainer/portainer-ce:latest
     restart: always
@@ -55,6 +81,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+
 volumes:
   postgres_data:
   caddy_data:
