@@ -26,8 +26,8 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      # Alpine Linux에 기본 내장된 wget으로 3000번 포트 정상 응답 확인
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 > /dev/null || exit 1"]
+     # [수정] wget 대신 Node 20 내장 fetch로 127.0.0.1 직접 점검 (IPv6 충돌 방지)
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 5s
       timeout: 3s
       retries: 5
