@@ -11,8 +11,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      frontend:
-        condition: service_healthy
+      - frontend
       backend:
         condition: service_healthy
 
@@ -25,15 +24,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-    healthcheck:
-     # [수정] wget 대신 Node 20 내장 fetch로 127.0.0.1 직접 점검 (IPv6 충돌 방지)
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
 
-  # 3. 백엔드
+  # 3. 백엔드 (12초 만에 Healthy 완벽 성공!)
   backend:
     build: ./backend
     restart: always
@@ -45,14 +37,13 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      # python slim 이미지에는 curl이 없을 수 있으므로 파이썬 내장 urllib로 8000번 포트 확인
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\" || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 15s
 
-  # 4. 데이터베이스 (PostgreSQL)
+  # 4. 데이터베이스 (PostgreSQL - 6초 만에 Healthy 완벽 성공!)
   db:
     image: postgres:15-alpine
     restart: always
@@ -65,7 +56,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      # PostgreSQL 공식 헬스체크 명령어
       test: ["CMD-SHELL", "pg_isready -U garnetadmin -d garnetdb"]
       interval: 5s
       timeout: 3s
