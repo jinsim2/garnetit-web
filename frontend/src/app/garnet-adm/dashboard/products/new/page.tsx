@@ -132,7 +132,7 @@ export default function NewProductPage() {
             if (catalogFile) {
                 const catalogFormData = new FormData();
                 catalogFormData.append("file", catalogFile);
-                const catalogRes = await fetch("/api/v1/upload", {
+                const catalogRes = await fetch("/api/v1/upload/", {
                     method: "POST",
                     body: catalogFormData
                 });

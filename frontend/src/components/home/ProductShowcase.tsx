@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/types/product";
-import { getProxyImageUrl } from "@/lib/utils"; // [추가됨] 도우미 함수 불러오기
+// import { getProxyImageUrl } from "@/lib/utils"; // [추가됨] 도우미 함수 불러오기
 
 export default function ProductShowcase() {
     // [추가됨] 백엔드 연동 로직

@@ -28,6 +28,11 @@ const nextConfig: NextConfig = {
         destination: `${BACKEND_URL}/uploads/:path*`,  // 실제 백엔드 주소
       },
       {
+        // 로컬 개발용: 운영에서는 Caddy가 /uploads/*를 먼저 백엔드로 보낸다.
+        source: '/uploads/:path*',
+        destination: `${BACKEND_URL}/uploads/:path*`,
+      },
+      {
         // API 통신 터널(이게 뚫려야 로그인, 데이터 조회 등이 가능하다.)
         source: '/api/:path*',
         destination: `${BACKEND_URL}/api/:path*`,  // 실제 백엔드 주소

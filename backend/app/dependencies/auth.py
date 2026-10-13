@@ -15,7 +15,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="토큰이 유효하지 않거나 만료되었ㅅ브니다. 다시 로그인 해 주세요.",
+        detail="토큰이 유효하지 않거나 만료되었습니다. 다시 로그인 해 주세요.",
         headers={"WWW-Authenticate": "Bearer"},
     )
 

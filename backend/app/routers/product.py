@@ -12,6 +12,7 @@ from app.models.user import User  # 유저 타입 힌트용
 router = APIRouter(prefix="/products", tags=["products"])
 
 # 1. 제품 생성
+@router.post("", response_model=schemas.ProductResponse, include_in_schema=False)
 @router.post("/", response_model=schemas.ProductResponse)
 def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_active_user)):
     db_product = models.Product(**product.model_dump())
@@ -21,6 +22,7 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
     return db_product
 
 # 2. 제품 목록 다중 필터 조회
+@router.get("", response_model=List[schemas.ProductResponse], include_in_schema=False)
 @router.get("/", response_model=List[schemas.ProductResponse])
 def read_products(
     category_id: Optional[int] = None,
