@@ -61,9 +61,10 @@ export default function ProductShowcase() {
                                 <div className="absolute inset-0 p-8 flex items-center justify-center">
                                     <div className="relative w-full h-full transform group-hover:scale-110 transition-transform duration-500">
                                         <Image
-                                            src={getProxyImageUrl(product.image_url)} // 여기서 도우미 함수 사용!
+                                            src={product.image_url || "/products/dome.png"} // [수정] 원본 경로 그대로 사용
                                             alt={product.name}
                                             fill
+                                            unoptimized // 💡 [추가] Next.js 서버 최적화를 거치지 않고 Caddy에서 다이렉트 로드!
                                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                                             priority
                                             className="object-contain drop-shadow-2xl opacity-0 transition-opacity duration-300"

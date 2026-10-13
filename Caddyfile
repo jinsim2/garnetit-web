@@ -4,6 +4,11 @@ garnet2014.cafe24.com {
     handle /api/* {
         reverse_proxy backend:8000
     }
+
+    # 💡 [추가] 업로드된 사진 파일도 백엔드 컨테이너(포트 8000)로 직통 연결!
+    handle /uploads/* {
+        reverse_proxy backend:8000
+    }
     
     # 2. 그 외 모든 사용자 접속은 프론트엔드 컨테이너(포트 3000)로 쏙!
     handle {
