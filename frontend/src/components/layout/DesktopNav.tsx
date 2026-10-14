@@ -27,7 +27,7 @@ const MENU_DATA = [
         cards: [
             { title: "영상 감시 체계", href: "/business/cctv", desc: "지능형 CCTV 및 AI 통합 관제 솔루션" },
             { title: "네트워크 보안 인프라", href: "/business/network", desc: "고속, 고가용성 유무선 보안 네트워크 인프라 구축" },
-            { title: "재난 예경보 시스템", href: "/business/boardcast", desc: "고해상도 방송 및 비상 경보 체계" },
+            { title: "재난 예경보 시스템", href: "/business/broadcast", desc: "고해상도 방송 및 비상 경보 체계" },
             { title: "통합 유지보수", href: "/business/maintenance", desc: "365일 무중단 시스템 운영 및 전문 관리" },
         ]
     },
