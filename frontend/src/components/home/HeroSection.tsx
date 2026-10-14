@@ -92,12 +92,13 @@ export default function HeroSection() {
                 </CarouselContent>
             </Carousel>
 
-            {/* 💡 3. 하단 고정 글래스모피즘 바 (회원님이 기획하신 버카다 핵심 구조!) */}
+            {/* 💡 3. 하단 고정 글래스모피즘 바 (모바일 컴팩트 최적화) */}
             <div className="absolute bottom-0 left-0 w-full z-20 bg-black/40 backdrop-blur-md border-t border-white/10">
-                <div className="container mx-auto px-6 lg:px-12 pb-6 flex flex-col lg:flex-row items-end justify-between gap-10">
+                {/* 모바일에서는 pb-4, gap-4로 슬림하게 줄임 */}
+                <div className="container mx-auto px-5 lg:px-12 py-3 lg:pb-6 flex flex-col lg:flex-row items-end justify-between gap-3 lg:gap-10">
 
-                    {/* 텍스트 영역 (AnimatePresence로 내용물만 우아하게 교체) */}
-                    <div className="flex-1 w-full min-h-[180px] flex flex-col justify-end">
+                    {/* 텍스트 영역: 모바일에서 min-h 강제 제거(min-h-0) */}
+                    <div className="flex-1 w-full min-h-0 lg:min-h-[180px] flex flex-col justify-end">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={current}
@@ -105,23 +106,23 @@ export default function HeroSection() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ duration: 0.6, ease: "easeOut" }}
-                                // 💡 박스가 너무 두껍지 않도록 슬림하게 조절했습니다.
+                                // 💡 박스가 너무 두껍지 않도록 슬림하게 조절
                                 className="w-full flex flex-col items-start text-left"
                             >
-                                {/* 1층: 카테고리 (단독으로 타이틀 위에 예쁘게 안착) */}
-                                <h2 className="text-[#C1121F] font-bold tracking-[0.2em] text-xs lg:text-sm mb-3 uppercase">
+                                {/* 1층: 카테고리 (모바일에서 여백 축소) */}
+                                <h2 className="text-[#C1121F] font-bold tracking-[0.2em] text-[11px] lg:text-sm mb-1 lg:mb-3 uppercase">
                                     {HERO_SLIDES[current].category}
                                 </h2>
 
                                 {/* 2층: 50:50 좌우 분할 그리드 (타이틀과 설명이 같은 선상에서 시작됨!) */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-16 items-start w-full">
-                                    {/* 좌측 50%: 강렬한 타이틀 */}
-                                    <h1 className="text-3xl lg:text-4xl font-extrabold text-white tracking-tight whitespace-pre-line leading-[1.3]">
+                                    {/* 모바일 타이틀: text-xl ~ text-2xl로 다이어트! */}
+                                    <h1 className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight lg:leading-[1.3] whitespace-pre-line">
                                         {HERO_SLIDES[current].title}
                                     </h1>
 
-                                    {/* 우측 50%: 부드러운 설명 */}
-                                    <p className="text-slate-300 text-sm lg:text-base leading-relaxed whitespace-pre-line">
+                                    {/* 모바일 설명: line-clamp-2로 최대 2줄만 깔끔하게 표시 */}
+                                    <p className="text-slate-300 text-xs lg:text-base leading-relaxed line-clamp-2 lg:line-clamp-none">
                                         {HERO_SLIDES[current].desc}
                                     </p>
                                 </div>
@@ -130,24 +131,24 @@ export default function HeroSection() {
                         </AnimatePresence>
                     </div>
 
-                    {/* 우측 하단 컨트롤러 (도트 네비게이션 + 원형 타이머) */}
-                    <div className="flex items-center gap-6 pb-2">
+                    {/* 우측 하단 컨트롤러: 모바일에서는 원형 타이머를 숨기고 도트만 심플하게 표시 */}
+                    <div className="flex items-center justify-end lg:justify-between w-full lg:w-auto gap-4 pt-1 lg:pt-0">
 
                         {/* 도트(점) 네비게이션 */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5">
                             {HERO_SLIDES.map((_, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => api?.scrollTo(idx)}
-                                    className={`h-2 rounded-full transition-all duration-500 ${current === idx ? "w-8 bg-[#C1121F]" : "w-2 bg-white/30 hover:bg-white/50"
+                                    className={`h-1.5 rounded-full transition-all duration-500 ${current === idx ? "w-6 bg-[#C1121F]" : "w-1.5 bg-white/30 hover:bg-white/50"
                                         }`}
                                     aria-label={`Go to slide ${idx + 1}`}
                                 />
                             ))}
                         </div>
 
-                        {/* 원형 타이머 */}
-                        <div className="relative w-14 h-14 flex items-center justify-center">
+                        {/* 원형 타이머: 모바일(작은 화면)에서는 숨김(hidden sm:flex) 처리하여 공간 확보! */}
+                        <div className="hidden sm:flex relative w-12 h-12 lg:w-14 lg:h-14 items-center justify-center">
                             <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
                                 <circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,0.1)" strokeWidth="6" fill="none" />
                                 <motion.circle
@@ -171,12 +172,13 @@ export default function HeroSection() {
                 </div>
             </div>
 
-            {/* 💡 4. 마우스 스크롤 인디케이터 (한화비전 스타일) */}
+            {/* 💡 4. 마우스 스크롤 인디케이터 (PC 환경에서만 노출!) */}
             <div
-                className="absolute bottom-8 lg:bottom-[240px] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
+                /* [수정] hidden lg:flex 로 변경하여 모바일 화면에서는 완전히 숨김 */
+                className="hidden lg:flex absolute lg:bottom-[240px] left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
                 onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
             >
-                {/* 마우스 외곽선 (알약 모양) */}
+                {/* 내부 마우스 모양 코드는 그대로 유지 */}
                 <div className="w-[28px] h-[44px] rounded-full border-2 border-white/40 flex justify-center p-1">
                     {/* 마우스 휠 (Framer Motion으로 위아래 바운스 애니메이션 적용) */}
                     <motion.div
