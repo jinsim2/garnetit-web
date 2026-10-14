@@ -55,13 +55,24 @@ export default function HeroSection() {
     return (
         <section className="relative w-full h-[calc(100dvh-80px)] bg-slate-900 overflow-hidden">
 
-            {/* 💡 1. 영구 고정 비디오 배경 (모든 슬라이드에서 공통으로 재생됨) */}
+            {/* 💡 1. 영구 고정 비디오 배경 (PC / 모바일 해상도 이중화) */}
+
+            {/* 🖥️ PC 전용 비디오 (태블릿/PC: 768px 이상에서만 보임) */}
             <video
                 autoPlay loop muted playsInline
-                className="absolute inset-0 w-full h-full object-cover z-0"
+                className="hidden md:block absolute inset-0 w-full h-full object-cover z-0"
             >
-                <source src="/videos/land_03_web.mp4" type="video/mp4" />
+                <source src="/videos/land_web.mp4" type="video/mp4" />
             </video>
+
+            {/* 📱 모바일 전용 비디오 (스마트폰: 768px 미만에서만 보임) */}
+            <video
+                autoPlay loop muted playsInline
+                className="block md:hidden absolute inset-0 w-full h-full object-cover z-0"
+            >
+                <source src="/videos/land_mobile.mp4" type="video/mp4" />
+            </video>
+
 
             {/* 비디오 텍스트 가독성을 위한 기본 50% 어두운 오버레이 */}
             <div className="absolute inset-0 bg-black/50 z-0 pointer-events-none"></div>
