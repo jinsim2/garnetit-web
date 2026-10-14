@@ -8,6 +8,10 @@ COPY . .
 # [추가됨] Next.js 원격 데이터 수집 기능 끄기(빌드 속도 향상)
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# frontend/Dockerfile (builder 단계, npm run build 앞)
+ARG NEXT_PUBLIC_KAKAO_MAP_API_KEY
+ENV NEXT_PUBLIC_KAKAO_MAP_API_KEY=$NEXT_PUBLIC_KAKAO_MAP_API_KEY
+
 # 💡 Phase 1에서 설정한 standalone 모드로 뼈대만 남기고 압축 빌드!
 RUN npm run build
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Building2, History, MapPin, Award } from "lucide-react";
+import KakaoMap from "@/components/company/kakaoMap";
 
 // 회사소개 탭 데이터
 const companyTabs = [
@@ -156,6 +157,24 @@ export default function CompanyPage() {
                                         </ul>
                                     </div>
                                 </div>
+                                {/* --- 2015년 --- */}
+                                <div className="mb-16 relative md:flex md:gap-12 w-full group">
+                                    {/* 회색 동그라미 */}
+                                    <div className="absolute -left-[9px] top-1.5 md:left-1/4 md:top-2 w-4 h-4 rounded-full bg-slate-300 border-4 border-white shadow-sm z-10 md:-translate-x-1/2 group-hover:scale-150 transition-transform duration-300"></div>
+
+                                    <div className="pl-6 md:pl-0 md:w-1/4 md:text-right mb-4 md:mb-0">
+                                        <h3 className="text-3xl font-black text-slate-400 tracking-tighter">2015</h3>
+                                    </div>
+
+                                    <div className="pl-6 md:pl-0 md:w-3/4">
+                                        <ul className="space-y-4 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                                            <li className="flex flex-col sm:flex-row gap-1 sm:gap-6">
+                                                <span className="font-bold text-slate-800 text-lg w-16 shrink-0">03월</span>
+                                                <span className="text-slate-600 text-lg">(주)가넷정보기술 법인 설립</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                                 {/* --- 2014년 --- */}
                                 <div className="mb-16 relative md:flex md:gap-12 w-full group">
                                     {/* 회색 동그라미 */}
@@ -255,12 +274,9 @@ export default function CompanyPage() {
                         <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-slate-100">
                             <h2 className="text-3xl font-bold text-slate-900 mb-8">오시는 길</h2>
 
-                            {/* 지도 자리 (시연용 가짜 이미지) */}
-                            <div className="w-full h-96 bg-slate-200 rounded-2xl mb-8 overflow-hidden relative group flex items-center justify-center">
-                                <span className="text-slate-400 font-medium z-10 bg-white/90 px-6 py-2 rounded-full shadow-sm">
-                                    📍 카카오맵 API가 연동될 자리입니다.
-                                </span>
-                                <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=1600&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 transition-all duration-1000" alt="map placeholder" />
+                            {/* 💡 [교체] 실제 카카오맵 인터랙티브 지도 연동 */}
+                            <div className="mb-8">
+                                <KakaoMap />
                             </div>
 
                             {/* 실제 스크래핑한 주소 정보 */}
