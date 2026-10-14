@@ -53,12 +53,12 @@ export default function KakaoMap() {
 
                 // 말풍선 인포윈도우
                 const iwContent = `
-                    <div style="padding:10px 14px; min-width:180px; font-family:sans-serif; text-align:left;">
-                        <div style="font-weight:bold; font-size:13px; color:#1E293B; margin-bottom:2px;">
+                    <div style="padding:10px 14px 12px; min-width:215px; font-family:sans-serif; text-align:left; white-space:nowrap; line-height:1.4;">
+                        <div style="font-weight:bold; font-size:13px; color:#1E293B; margin-bottom:4px;">
                             (주)가넷정보기술
                         </div>
                         <div style="font-size:11px; color:#64748B;">
-                            부산국제금융센터2 (BIFC2) 12층
+                            부산국제금융센터2 (BIFC2) 12층 1227호
                         </div>
                     </div>
                 `;
