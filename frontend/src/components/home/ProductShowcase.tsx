@@ -47,7 +47,7 @@ export default function ProductShowcase() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {/* 💡 [수정됨] 하드코딩 배열(PRODUCTS) 대신 백엔드에서 가져온 배열(products)을 맵핑! */}
                     {products.map((product) => (
-                        <Link href={`/product/${product.id}`} key={product.id} className="group cursor-pointer">
+                        <Link href={`/product/detail/${product.id}`} key={product.id} className="group cursor-pointer">
                             {/* 제품 이미지 박스 */}
                             <div className="relative h-64 bg-slate-800 rounded-2xl overflow-hidden mb-6 border border-slate-700 group-hover:border-[#C1121F]/50 transition-colors duration-300">
 
