@@ -6,6 +6,7 @@ from . import partner
 from . import auth
 from . import user
 from . import upload
+from . import inquiry
 
 # 1. 모든 라우터를 하나로 묶을 '거대한 대장 라우터'를 하나 만든다 
 # 나중에 api/v1/categories 처럼 버전 관리를 하기 위해 /api/v1을 붙여두면 좋다.
@@ -19,3 +20,4 @@ api_router.include_router(partner.router)
 api_router.include_router(auth.router)
 api_router.include_router(user.router)
 api_router.include_router(upload.router)
+api_router.include_router(inquiry.router)
