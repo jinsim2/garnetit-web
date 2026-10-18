@@ -30,7 +30,13 @@ export const menuItems = [
         ]
     },
     { name: "관리자 계정", path: "/garnet-adm/dashboard/users", icon: Users },
-    { name: "환경 설정", path: "/garnet-adm/dashboard/settings", icon: Settings },
+    {
+        name: "환경 설정", icon: Settings,
+        subItems: [ // 서브메뉴 배열 추가!
+            { name: "일반 설정", path: "/garnet-adm/dashboard/settings/general" },
+            { name: "백업 관리", path: "/garnet-adm/dashboard/settings/backup" },
+        ]
+    },
 ];
 
 export default function AdminSidebar() {
