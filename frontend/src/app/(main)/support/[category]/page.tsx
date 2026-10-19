@@ -2,11 +2,13 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Megaphone, Download, HelpCircle, FileDown, Search, Mail } from "lucide-react";
+import { Megaphone, Download, HelpCircle, FileDown, Search, Mail, CheckCircle2, Loader2 } from "lucide-react";
 
 // Shadcn UI 컴포넌트 임포트 (기존에 설치된 것들 재활용)
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
+import { useState } from "react";
 
 const supportTabs = [
     { id: "notice", name: "공지사항", icon: Megaphone },
@@ -18,6 +20,74 @@ const supportTabs = [
 export default function SupportPage() {
     const params = useParams();
     const activeCategory = (params.category as string) || "notice";
+
+    // [신규] 1. 온라인 문의 입력 폼 State
+    const [formData, setFormData] = useState({
+        company_name: "",
+        author_name: "",
+        email: "",
+        phone: "",
+        message: "",
+    });
+
+    // [신규] 2. 전송 중 상태 & 개인 정보 동의 & 접수 완료 상태
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAgreed, setIsAgreed] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    // [신규] 3. 입력값 변경 핸들러
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    // [신규] 4. 백엔드로 문의 전송 (API 호출)
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        // 1) 개인정보 덩의 검증
+        if (!isAgreed) {
+            alert("개인정보 수집 및 이용에 동의해 주세요!");
+            return;
+        }
+
+        // 2) 백엔드 전송 시작
+        setIsSubmitting(true);
+        try {
+            const res = await fetch("/api/v1/inquiries/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({ message: "알 수 없는 오류 발생!" }));
+                throw new Error(errorData.detail || "문의 접수에 실패했습니다!");
+            }
+
+            // 3) 성공 시: 폼 초기화 및 성공 화면으로 전환
+            setIsSuccess(true);
+            setFormData({
+                company_name: "",
+                author_name: "",
+                email: "",
+                phone: "",
+                message: "",
+            });
+            setIsAgreed(false);
+
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || "서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     // 탭 부드러운 스크롤 (사업영역, 제품소개와 동일)
     const handleTabClick = () => {
@@ -222,47 +292,139 @@ export default function SupportPage() {
                     {/* --- 3-4. 온라인 문의 (Inquiry) --- */}
                     {activeCategory === "inquiry" && (
                         <div className="bg-white rounded-3xl p-6 md:p-12 shadow-sm border border-slate-100">
-                            <div className="mb-8 text-center md:text-left">
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">온라인 문의</h2>
-                                <p className="text-slate-500">도입 상담, 견적 요청 등 궁금하신 점을 남겨주시면 담당자가 신속하게 답변해 드립니다.</p>
-                            </div>
 
-                            <form className="max-w-3xl mx-auto space-y-6">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">회사명 / 기관명 <span className="text-[#C1121F]">*</span></label>
-                                        <input type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all" placeholder="가넷정보기술" />
+                            {/* ✨ 접수 성공 시 나타나는 감사 화면 */}
+                            {isSuccess ? (
+                                <div className="text-center py-16 space-y-6 animate-in fade-in zoom-in duration-500">
+                                    <div className="w-20 h-20 bg-red-50 text-[#C1121F] rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                        <CheckCircle2 size={44} />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">담당자 성함 <span className="text-[#C1121F]">*</span></label>
-                                        <input type="text" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all" placeholder="홍길동" />
+                                        <h3 className="text-3xl font-extrabold text-slate-900">문의가 성공적으로 접수되었습니다!</h3>
+                                        <p className="text-slate-500 text-lg max-w-lg mx-auto">
+                                            가넷정보기술의 전문 엔지니어가 접수해 주신 내용을 검토한 후,
+                                            남겨주신 연락처로 신속하게 안내해 드리겠습니다.
+                                        </p>
+                                    </div>
+                                    <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                                        {/* 1. 메인 홈으로 가기 (가장 무난한 탈출구) */}
+                                        <Link href="/" className="px-8 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all">
+                                            홈으로 이동
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsSuccess(false)}
+                                            className="px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all"
+                                        >
+                                            추가 문의 접수하기
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">연락처 <span className="text-[#C1121F]">*</span></label>
-                                        <input type="tel" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all" placeholder="010-0000-0000" />
+                            ) : (
+                                /* ✨ 실제 입력 폼 */
+                                <div>
+                                    <div className="mb-8 text-center md:text-left">
+                                        <h2 className="text-2xl font-bold text-slate-900 mb-2">온라인 문의</h2>
+                                        <p className="text-slate-500">도입 상담, 견적 요청 등 궁금하신 점을 남겨주시면 담당자가 신속하게 답변해 드립니다.</p>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-bold text-slate-700">이메일 <span className="text-[#C1121F]">*</span></label>
-                                        <input type="email" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all" placeholder="example@domain.com" />
-                                    </div>
+                                    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-6">
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-slate-700">회사명 / 기관명 <span className="text-[#C1121F]">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    name="company_name"
+                                                    required
+                                                    value={formData.company_name}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all"
+                                                    placeholder="예: 가넷정보기술"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-slate-700">담당자 성함 <span className="text-[#C1121F]">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    name="author_name"
+                                                    required
+                                                    value={formData.author_name}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all"
+                                                    placeholder="예: 홍길동 팀장"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-slate-700">연락처 <span className="text-[#C1121F]">*</span></label>
+                                                <input
+                                                    type="tel"
+                                                    name="phone"
+                                                    required
+                                                    value={formData.phone}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all"
+                                                    placeholder="010-0000-0000"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-bold text-slate-700">이메일 <span className="text-[#C1121F]">*</span></label>
+                                                <input
+                                                    type="email"
+                                                    name="email"
+                                                    required
+                                                    value={formData.email}
+                                                    onChange={handleInputChange}
+                                                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all"
+                                                    placeholder="example@domain.com"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">문의 내용 <span className="text-[#C1121F]">*</span></label>
+                                            <textarea
+                                                name="message"
+                                                required
+                                                rows={6}
+                                                value={formData.message}
+                                                onChange={handleInputChange}
+                                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all resize-none"
+                                                placeholder="도입을 검토 중인 솔루션, 수량, 현장 환경 등을 상세히 적어주시면 더욱 정확한 상담이 가능합니다."
+                                            ></textarea>
+                                        </div>
+                                        {/* ⚖️ 법적 필수: 개인정보 수집 및 이용 동의 체크박스 */}
+                                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-600 flex items-start gap-3">
+                                            <input
+                                                type="checkbox"
+                                                id="privacy-agree"
+                                                checked={isAgreed}
+                                                onChange={(e) => setIsAgreed(e.target.checked)}
+                                                className="mt-1 w-4 h-4 rounded text-[#C1121F] focus:ring-[#C1121F] border-slate-300 cursor-pointer"
+                                            />
+                                            <label htmlFor="privacy-agree" className="cursor-pointer select-none">
+                                                <span className="font-bold text-slate-800">[필수]</span> 문의 처리를 위한 개인정보(회사명, 성함, 연락처, 이메일) 수집 및 이용에 동의합니다.
+                                            </label>
+                                        </div>
+                                        {/* 전송 버튼 (로딩 스피너 및 중복 방지 적용) */}
+                                        <div className="pt-4 flex justify-center">
+                                            <button
+                                                type="submit"
+                                                disabled={isSubmitting}
+                                                className="min-w-[200px] flex items-center justify-center gap-2 px-12 py-4 bg-[#C1121F] hover:bg-red-700 disabled:bg-slate-400 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-900/20 transition-all transform hover:-translate-y-1 disabled:transform-none disabled:cursor-not-allowed cursor-pointer"
+                                            >
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <Loader2 className="animate-spin" size={20} />
+                                                        접수 처리 중...
+                                                    </>
+                                                ) : (
+                                                    "문의 접수하기"
+                                                )}
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">문의 내용 <span className="text-[#C1121F]">*</span></label>
-                                    <textarea rows={6} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F] transition-all resize-none" placeholder="문의하실 내용을 상세히 적어주세요."></textarea>
-                                </div>
-
-                                <div className="pt-6 flex justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => { e.preventDefault(); alert('해당 기능은 벡엔드 연동 후에 처리됩니다. (현재는 UI 데모입니다.)'); }}
-                                        className="px-12 py-4 bg-[#C1121F] hover:bg-red-700 text-white font-bold text-lg rounded-xl shadow-lg shadow-red-900/20 transition-all transform hover:-translate-y-1"
-                                    >
-                                        문의 접수하기
-                                    </button>
-                                </div>
-                            </form>
+                            )}
                         </div>
                     )}
 
