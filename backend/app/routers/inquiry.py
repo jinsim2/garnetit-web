@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List, Optional
@@ -14,6 +14,9 @@ from app.models.user import User
 # Pydantic 스키마
 from app.schemas.inquiry import InquiryCreate, InquiryUpdate, InquiryResponse
 
+# 디스코드 알림 함수 import
+from app.services.discord import send_discord_inquiry_notification
+
 # 라우터 객체 생성 (prefix: /inquiries)
 router = APIRouter(
     prefix="/inquiries",
@@ -25,7 +28,8 @@ router = APIRouter(
 @router.post("", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 # @router.post("/", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED)
 def create_inquiry(
-    inquiry_in: InquiryCreate, 
+    inquiry_in: InquiryCreate,
+    background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
     """
@@ -43,6 +47,10 @@ def create_inquiry(
     db.add(new_inquiry)
     db.commit()
     db.refresh(new_inquiry)
+
+    # 🚀 DB 저장이 완료된 후, 백그라운드에서 디스코드 알림 즉시 발송!
+    background_tasks.add_task(send_discord_inquiry_notification, new_inquiry)
+
     return new_inquiry
 
 
