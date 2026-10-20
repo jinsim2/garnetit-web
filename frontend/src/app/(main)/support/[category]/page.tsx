@@ -57,7 +57,7 @@ export default function SupportPage() {
         // 2) 백엔드 전송 시작
         setIsSubmitting(true);
         try {
-            const res = await fetch("/api/v1/inquiries/", {
+            const res = await fetch("/api/v1/inquiries", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
