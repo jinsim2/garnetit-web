@@ -9,7 +9,7 @@ from app.models.user import User
 
 # 이 코드가 바로 Swagger UI 우측 상단에 '자물쇠(Authorize)' 버튼을 만들어주는 마법의 선언이다!
 # tokenurl은 우리가 방금 만든 로그인 API의 주소를 적어준다. (사용자가 로그인하여 토큰을 받아오는 API 주소)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 # API 검문소 함수(프론트엔드가 토큰을 들고오면 여기서 뺏어서 검사한다.)
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

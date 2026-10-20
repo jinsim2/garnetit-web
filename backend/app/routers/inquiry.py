@@ -22,7 +22,8 @@ router = APIRouter(
 
 
 # 💡 [공개 API] 1. 고객 문의 접수 (로그인 불필요, 누구나 가능)
-@router.post("/", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
+# @router.post("/", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED)
 def create_inquiry(
     inquiry_in: InquiryCreate, 
     db: Session = Depends(get_db)
@@ -46,7 +47,8 @@ def create_inquiry(
 
 
 # 🔒 [관리자 전용] 2. 문의 내역 전체 목록 조회 (최신순 정렬, 필터링 지원)
-@router.get("/", response_model=List[InquiryResponse])
+@router.get("", response_model=List[InquiryResponse], include_in_schema=False)
+# @router.get("/", response_model=List[InquiryResponse])
 def get_inquiries(
     skip: int = 0,
     limit: int = 100,

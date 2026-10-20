@@ -10,7 +10,7 @@ export default function DashboardLayout({
     return (
         // 이제 AdminGuard 안쪽에 있는 모든 화면은 토큰 없이는 절대 접근할 수 없다!
         <AdminGuard>
-             // 전체 배경은 아주 옅은 회색(slate-50)으로 깔아줍니다.
+            {/*전체 배경은 아주 옅은 회색(slate-50)으로 깔아줍니다.*/}
             <div className="min-h-screen bg-slate-50 flex">
 
                 {/* 1. 좌측 사이드바 (고정) */}
