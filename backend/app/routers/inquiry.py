@@ -17,6 +17,9 @@ from app.schemas.inquiry import InquiryCreate, InquiryUpdate, InquiryResponse
 # 디스코드 알림 함수 import
 from app.services.discord import send_discord_inquiry_notification
 
+# 문의 글에 대한 이메일 전송 함수 import
+from app.services.email import send_inquiry_emails
+
 # 라우터 객체 생성 (prefix: /inquiries)
 router = APIRouter(
     prefix="/inquiries",
@@ -48,8 +51,11 @@ def create_inquiry(
     db.commit()
     db.refresh(new_inquiry)
 
-    # 🚀 DB 저장이 완료된 후, 백그라운드에서 디스코드 알림 즉시 발송!
+    # DB 저장이 완료된 후, 백그라운드에서 디스코드 알림 즉시 발송!
     background_tasks.add_task(send_discord_inquiry_notification, new_inquiry)
+
+    # 문의 글에 대한 이메일 전송 백그라운드 실행
+    background_tasks.add_task(send_inquiry_emails, new_inquiry)
 
     return new_inquiry
 
