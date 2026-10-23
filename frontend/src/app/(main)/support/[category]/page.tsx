@@ -2,13 +2,13 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Megaphone, Download, HelpCircle, FileDown, Search, Mail, CheckCircle2, Loader2 } from "lucide-react";
+import { Megaphone, Download, HelpCircle, FileDown, Search, Mail, CheckCircle2, Loader2, Pin, X, Eye } from "lucide-react";
 
 // Shadcn UI 컴포넌트 임포트 (기존에 설치된 것들 재활용)
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const supportTabs = [
     { id: "notice", name: "공지사항", icon: Megaphone },
@@ -16,6 +16,16 @@ const supportTabs = [
     { id: "faq", name: "묻고 답하기 (FAQ)", icon: HelpCircle },
     { id: "inquiry", name: "온라인 문의", icon: Mail },
 ];
+
+// 💡 공지사항 데이터 타입
+interface NoticeItem {
+    id: number;
+    title: string;
+    content: string;
+    is_pinned: boolean;
+    view_count: number;
+    created_at: string;
+}
 
 export default function SupportPage() {
     const params = useParams();
@@ -34,6 +44,49 @@ export default function SupportPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isAgreed, setIsAgreed] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+
+    // 💡 공지사항 관련 State
+    const [notices, setNotices] = useState<NoticeItem[]>([]);
+    const [isLoadingNotices, setIsLoadingNotices] = useState(false);
+    const [selectedNotice, setSelectedNotice] = useState<NoticeItem | null>(null);
+    const [noticeSearch, setNoticeSearch] = useState("");
+
+    // 공지사항 탭이 활성화될 때 DB에서 공지 목록 불러오기
+    useEffect(() => {
+        if (activeCategory === "notice") {
+            fetchNotices();
+        }
+    }, [activeCategory]);
+    const fetchNotices = async () => {
+        setIsLoadingNotices(true);
+        try {
+            const res = await fetch("/api/v1/notices");
+            if (res.ok) {
+                const data = await res.json();
+                setNotices(data);
+            }
+        } catch (error) {
+            console.error("공지사항 목록 로드 실패:", error);
+        } finally {
+            setIsLoadingNotices(false);
+        }
+    };
+
+    // 공지사항 클릭 시 상세 내용 열기 & 조회수 증가
+    const handleNoticeClick = async (notice: NoticeItem) => {
+        setSelectedNotice(notice);
+        try {
+            const res = await fetch(`/api/v1/notices/${notice.id}`);
+            if (res.ok) {
+                const updated = await res.json();
+                setSelectedNotice(updated);
+                // 목록의 조회수도 실시간 반영
+                setNotices(prev => prev.map(n => n.id === notice.id ? updated : n));
+            }
+        } catch (error) {
+            console.error("공지 상세 로드 실패:", error);
+        }
+    };
 
     // [신규] 3. 입력값 변경 핸들러
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -167,50 +220,150 @@ export default function SupportPage() {
             {/* 3. 콘텐츠 영역 */}
             <section className="py-20 px-6 lg:px-12">
                 <div className="container mx-auto max-w-5xl">
-
                     {/* --- 3-1. 공지사항 (Notice) --- */}
                     {activeCategory === "notice" && (
-                        <div className="bg-white rounded-3xl p-6 md:p-12 shadow-sm border border-slate-100">
-                            <div className="mb-8">
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">공지사항</h2>
-                                <p className="text-slate-500">가넷정보기술의 새로운 소식과 주요 업데이트를 알려드립니다.</p>
+                        <div className="bg-white rounded-3xl p-6 md:p-12 shadow-sm border border-slate-100 space-y-6">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-2">공지사항</h2>
+                                    <p className="text-slate-500 text-sm">가넷정보기술의 새로운 소식과 주요 업데이트를 알려드립니다.</p>
+                                </div>
+                                {/* 공지 검색창 */}
+                                <div className="relative w-full md:w-72">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="공지 검색..."
+                                        value={noticeSearch}
+                                        onChange={(e) => setNoticeSearch(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F]"
+                                    />
+                                </div>
                             </div>
-
                             <div className="rounded-xl border border-slate-200 overflow-hidden">
                                 <Table>
                                     <TableHeader className="bg-slate-50">
                                         <TableRow className="hover:bg-transparent">
-                                            {/* 모바일에서는 '번호' 숨김 */}
                                             <TableHead className="hidden md:table-cell w-[100px] text-center font-bold text-slate-600">번호</TableHead>
                                             <TableHead className="font-bold text-slate-600">제목</TableHead>
-                                            <TableHead className="w-[100px] md:w-[150px] text-center font-bold text-slate-600">작성일</TableHead>
+                                            <TableHead className="w-[100px] text-center font-bold text-slate-600 hidden sm:table-cell">조회수</TableHead>
+                                            <TableHead className="w-[120px] text-center font-bold text-slate-600">작성일</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {[
-                                            { id: 4, title: "[안내] 2026년 AXGATE 플래티넘 레벨 유지", date: "2026.08.28", isNew: true },
-                                            { id: 3, title: "[업데이트] 지능형 VMS 소프트웨어 v2.5 릴리즈 노트", date: "2026.08.20", isNew: false },
-                                            { id: 2, title: "[공지] 신규 AI 돔 카메라 라인업 출시 안내", date: "2026.07.15", isNew: false },
-                                            { id: 1, title: "[안내] 가넷정보기술 공식 홈페이지 리뉴얼 오픈", date: "2026.06.01", isNew: false },
-                                        ].map((item) => (
-                                            <TableRow
-                                                key={item.id}
-                                                onClick={() => alert(`[공지사항 상세] 백엔드 연동 후 '/support/notice/${item.id}' 경로로 이동합니다.`)}
-                                                className="cursor-pointer hover:bg-slate-50 transition-colors">
-                                                {/* 모바일에서는 '번호' 숨김 */}
-                                                <TableCell className="hidden md:table-cell text-center text-slate-500">{item.id}</TableCell>
-                                                {/* 제목이 길면 말줄임표(...) 처리. truncate를 위해 max-w 지정 */}
-                                                <TableCell className="font-medium text-slate-800 max-w-[150px] md:max-w-none">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="truncate">{item.title}</span>
-                                                        {item.isNew && <span className="px-2 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded-md">NEW</span>}
+                                        {isLoadingNotices ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-40 text-center text-slate-400">
+                                                    <div className="flex flex-col items-center justify-center gap-2">
+                                                        <Loader2 className="animate-spin text-[#C1121F]" size={24} />
+                                                        <span className="text-sm">공지사항을 불러오는 중입니다...</span>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell className="text-center text-slate-500">{item.date}</TableCell>
                                             </TableRow>
-                                        ))}
+                                        ) : notices.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="h-40 text-center text-slate-400 text-sm">
+                                                    등록된 공지사항이 없습니다.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            notices
+                                                .filter(n => n.title.toLowerCase().includes(noticeSearch.toLowerCase()) || n.content.toLowerCase().includes(noticeSearch.toLowerCase()))
+                                                .map((item) => {
+                                                    // 최근 7일 이내 작성된 글인지 확인 (NEW 뱃지용)
+                                                    const isNew = (new Date().getTime() - new Date(item.created_at).getTime()) < (7 * 24 * 60 * 60 * 1000);
+                                                    return (
+                                                        <TableRow
+                                                            key={item.id}
+                                                            onClick={() => handleNoticeClick(item)}
+                                                            className={`cursor-pointer transition-colors ${item.is_pinned ? "bg-amber-50/40 hover:bg-amber-50/80" : "hover:bg-slate-50"}`}
+                                                        >
+                                                            {/* 구분 (상단고정 뱃지 또는 번호) */}
+                                                            <TableCell className="hidden md:table-cell text-center">
+                                                                {item.is_pinned ? (
+                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded">
+                                                                        <Pin size={11} className="fill-amber-800" /> 공지
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-400 text-xs">{item.id}</span>
+                                                                )}
+                                                            </TableCell>
+                                                            {/* 제목 */}
+                                                            <TableCell className="font-medium text-slate-800">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className={`hover:text-[#C1121F] transition-colors ${item.is_pinned ? "font-bold text-slate-900" : ""}`}>
+                                                                        {item.title}
+                                                                    </span>
+                                                                    {isNew && (
+                                                                        <span className="px-1.5 py-0.5 bg-red-100 text-red-600 text-[10px] font-bold rounded">NEW</span>
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                            {/* 조회수 */}
+                                                            <TableCell className="hidden sm:table-cell text-center text-slate-400 text-xs">
+                                                                {item.view_count.toLocaleString()}
+                                                            </TableCell>
+                                                            {/* 작성일 */}
+                                                            <TableCell className="text-center text-slate-500 text-xs">
+                                                                {new Date(item.created_at).toLocaleDateString()}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    );
+                                                })
+                                        )}
                                     </TableBody>
                                 </Table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 💡 고객용 공지사항 본문 상세보기 모달 */}
+                    {selectedNotice && (
+                        <div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+                            onClick={() => setSelectedNotice(null)}
+                        >
+                            <div
+                                className="bg-white rounded-3xl max-w-2xl w-full p-8 shadow-2xl relative space-y-6 max-h-[85vh] overflow-y-auto"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* 닫기 버튼 */}
+                                <button
+                                    onClick={() => setSelectedNotice(null)}
+                                    className="absolute top-6 right-6 text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+                                >
+                                    <X size={20} />
+                                </button>
+                                {/* 공지 헤더 */}
+                                <div className="border-b border-slate-100 pb-5">
+                                    {selectedNotice.is_pinned && (
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-md mb-2">
+                                            <Pin size={12} className="fill-amber-800" /> 중요 공지
+                                        </span>
+                                    )}
+                                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-snug">
+                                        {selectedNotice.title}
+                                    </h2>
+                                    <div className="flex items-center gap-4 text-xs text-slate-400 mt-3">
+                                        <span>작성일: {new Date(selectedNotice.created_at).toLocaleDateString()}</span>
+                                        <span>•</span>
+                                        <span className="flex items-center gap-1"><Eye size={12} /> 조회수 {selectedNotice.view_count.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                                {/* 공지 본문 내용 */}
+                                <div className="text-slate-700 whitespace-pre-wrap leading-relaxed text-sm md:text-base min-h-[160px]">
+                                    {selectedNotice.content}
+                                </div>
+                                {/* 닫기 버튼 */}
+                                <div className="pt-4 border-t border-slate-100 flex justify-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedNotice(null)}
+                                        className="px-6 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-all cursor-pointer"
+                                    >
+                                        닫기
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

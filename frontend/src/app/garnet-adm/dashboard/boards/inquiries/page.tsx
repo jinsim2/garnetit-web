@@ -157,10 +157,14 @@ export default function InquiriesPage() {
         <div className="space-y-6">
 
             {/* 상단 타이틀 및 새로고침 */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-800">온라인 문의 접수함</h1>
-                    <p className="text-slate-500 text-sm mt-1">고객이 홈페이지를 통해 남긴 도입 및 견적 문의를 확인하고 관리합니다.</p>
+                    <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <Mail className="text-[#C1121F]" /> 온라인 문의 접수함
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-1">
+                        고객이 홈페이지를 통해 남긴 도입 및 견적 문의를 확인하고 관리합니다.
+                    </p>
                 </div>
                 <button
                     onClick={fetchInquiries}
@@ -172,7 +176,7 @@ export default function InquiriesPage() {
             </div>
 
             {/* 💡 요약 통계 위젯 카드 3종 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div
                     onClick={() => setStatusFilter("ALL")}
                     className={`bg-white p-6 rounded-2xl border transition-all cursor-pointer shadow-sm ${statusFilter === "ALL" ? "border-slate-800 ring-2 ring-slate-800/10" : "border-slate-100 hover:border-slate-300"}`}
