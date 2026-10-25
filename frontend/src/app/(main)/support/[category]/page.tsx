@@ -27,6 +27,21 @@ interface NoticeItem {
     created_at: string;
 }
 
+// 💡 [추가] 자료실 데이터 타입
+interface DownloadItem {
+    id: number;
+    title: string;
+    category: string;
+    description?: string;
+    file_url: string;
+    file_name: string;
+    file_size: string;
+    file_ext: string;
+    download_count: number;
+    is_published: boolean;
+    created_at: string;
+}
+
 export default function SupportPage() {
     const params = useParams();
     const activeCategory = (params.category as string) || "notice";
@@ -51,12 +66,21 @@ export default function SupportPage() {
     const [selectedNotice, setSelectedNotice] = useState<NoticeItem | null>(null);
     const [noticeSearch, setNoticeSearch] = useState("");
 
-    // 공지사항 탭이 활성화될 때 DB에서 공지 목록 불러오기
+    // 💡 [추가] 자료실 관련 State
+    const [downloads, setDownloads] = useState<DownloadItem[]>([]);
+    const [isLoadingDownloads, setIsLoadingDownloads] = useState(false);
+    const [downloadCategory, setDownloadCategory] = useState("전체");
+    const [downloadSearch, setDownloadSearch] = useState("");
+
+    // 💡 [수정] 공지사항 및 자료실 탭이 활성화될 때 각각 DB에서 목록 불러오기
     useEffect(() => {
         if (activeCategory === "notice") {
             fetchNotices();
+        } else if (activeCategory === "download") {
+            fetchDownloads();
         }
     }, [activeCategory]);
+
     const fetchNotices = async () => {
         setIsLoadingNotices(true);
         try {
@@ -85,6 +109,44 @@ export default function SupportPage() {
             }
         } catch (error) {
             console.error("공지 상세 로드 실패:", error);
+        }
+    };
+
+    // 💡 [추가] 자료실 목록 불러오기
+    const fetchDownloads = async () => {
+        setIsLoadingDownloads(true);
+        try {
+            const res = await fetch("/api/v1/downloads");
+            if (res.ok) {
+                const data = await res.json();
+                setDownloads(data);
+            }
+        } catch (error) {
+            console.error("자료실 목록 로드 실패:", error);
+        } finally {
+            setIsLoadingDownloads(false);
+        }
+    };
+
+    // 💡 [추가] 파일 다운로드 핸들러 (다운로드 수 카운트 증가 + 파일 저장)
+    const handleDownload = async (item: DownloadItem, e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            // 1) 백엔드에 다운로드 카운트 +1 요청
+            fetch(`/api/v1/downloads/${item.id}/download`, { method: "POST" }).catch(console.error);
+
+            // 2) UI 상의 카운트 즉시 1 증가
+            setDownloads(prev => prev.map(d => d.id === item.id ? { ...d, download_count: d.download_count + 1 } : d));
+
+            // 3) 브라우저 다운로드 트리거
+            const link = document.createElement("a");
+            link.href = item.file_url;
+            link.download = item.file_name || `${item.title}.${item.file_ext.toLowerCase()}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("파일 다운로드 실패:", error);
         }
     };
 
@@ -370,42 +432,123 @@ export default function SupportPage() {
 
                     {/* --- 3-2. 자료실 (Download) --- */}
                     {activeCategory === "download" && (
-                        <div className="space-y-8">
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">자료실</h2>
-                                <p className="text-slate-500">제품 카탈로그, 사용자 매뉴얼, 최신 소프트웨어를 다운로드하실 수 있습니다.</p>
+                        <div className="space-y-6">
+                            {/* 헤더 & 검색창 */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-1">자료실</h2>
+                                    <p className="text-slate-500 text-sm">제품 카탈로그, 매뉴얼, 소프트웨어 등 최신 공식 자료를 다운로드하실 수 있습니다.</p>
+                                </div>
+                                <div className="relative w-full md:w-72">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="자료 검색 (제목, 설명)..."
+                                        value={downloadSearch}
+                                        onChange={(e) => setDownloadSearch(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F]"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {[
-                                    { category: "카탈로그", title: "2024 통합 보안 솔루션 카탈로그", ext: "PDF", size: "15.2MB" },
-                                    { category: "매뉴얼", title: "AI 돔 카메라 사용자 매뉴얼 v1.2", ext: "PDF", size: "4.8MB" },
-                                    { category: "소프트웨어", title: "PC용 통합 관제 뷰어 (Windows)", ext: "ZIP", size: "142.0MB" },
-                                    { category: "기술문서", title: "재난망 연동 표준 API 명세서", ext: "PDF", size: "2.1MB" },
-                                    { category: "소프트웨어", title: "네트워크 설정 유틸리티 툴", ext: "EXE", size: "8.5MB" },
-                                    { category: "카탈로그", title: "공공기관 전용 조달 제품 안내서", ext: "PDF", size: "12.0MB" },
-                                ].map((doc, idx) => (
-                                    <div key={idx}
-                                        onClick={() => alert(`'${doc.title}' 파일 다운로드 기능은 관리자 페이지에서 지원합니다.`)}
-                                        className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-[#C1121F]/50 hover:shadow-md transition-all group flex flex-col justify-between cursor-pointer">
-                                        <div>
-                                            <div className="flex justify-between items-start mb-4">
-                                                <span className="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md group-hover:bg-[#C1121F]/10 group-hover:text-[#C1121F] transition-colors">{doc.category}</span>
-                                                <span className="text-xs font-semibold text-slate-400 bg-slate-50 px-2 py-1 rounded border border-slate-100">{doc.ext}</span>
-                                            </div>
-                                            <h3 className="font-bold text-slate-900 text-lg leading-tight mb-2 group-hover:text-[#C1121F] transition-colors">{doc.title}</h3>
-                                        </div>
-                                        <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-sm text-slate-500">
-                                            <span>{doc.size}</span>
-                                            <div className="flex items-center gap-1 text-[#C1121F] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
-                                                다운로드 <FileDown size={16} />
-                                            </div>
-                                        </div>
-                                    </div>
+                            {/* 카테고리 필터 버튼 탭 */}
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                                {["전체", "카탈로그", "매뉴얼", "소프트웨어", "드라이버", "기술문서", "기타"].map((cat) => (
+                                    <button
+                                        key={cat}
+                                        type="button"
+                                        onClick={() => setDownloadCategory(cat)}
+                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${downloadCategory === cat
+                                            ? "bg-[#C1121F] text-white shadow-sm"
+                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                            }`}
+                                    >
+                                        {cat}
+                                    </button>
                                 ))}
                             </div>
+
+                            {/* 자료 카드 그리드 */}
+                            {isLoadingDownloads ? (
+                                <div className="py-24 text-center">
+                                    <Loader2 className="animate-spin text-[#C1121F] mx-auto mb-3" size={32} />
+                                    <p className="text-slate-500 text-sm">자료 목록을 불러오는 중입니다...</p>
+                                </div>
+                            ) : (
+                                (() => {
+                                    const filteredDownloads = downloads.filter((item) => {
+                                        const matchCategory = downloadCategory === "전체" || item.category === downloadCategory;
+                                        const matchSearch =
+                                            item.title.toLowerCase().includes(downloadSearch.toLowerCase()) ||
+                                            (item.description && item.description.toLowerCase().includes(downloadSearch.toLowerCase()));
+                                        return matchCategory && matchSearch;
+                                    });
+
+                                    if (filteredDownloads.length === 0) {
+                                        return (
+                                            <div className="bg-white rounded-2xl border border-slate-100 p-16 text-center shadow-sm">
+                                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                                                    <Download size={28} />
+                                                </div>
+                                                <h3 className="text-lg font-bold text-slate-800 mb-1">등록된 자료가 없습니다</h3>
+                                                <p className="text-sm text-slate-400">
+                                                    {downloadSearch || downloadCategory !== "전체"
+                                                        ? "검색 조건에 일치하는 자료가 없습니다."
+                                                        : "현재 등록된 공개 자료가 없습니다."}
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {filteredDownloads.map((doc) => (
+                                                <div
+                                                    key={doc.id}
+                                                    onClick={(e) => handleDownload(doc, e)}
+                                                    className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:border-[#C1121F]/50 hover:shadow-md transition-all group flex flex-col justify-between cursor-pointer"
+                                                >
+                                                    <div>
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <span className="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md group-hover:bg-[#C1121F]/10 group-hover:text-[#C1121F] transition-colors">
+                                                                {doc.category}
+                                                            </span>
+                                                            <span className="text-xs font-bold px-2 py-0.5 rounded border bg-slate-50 text-slate-600 border-slate-200">
+                                                                {doc.file_ext}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="font-bold text-slate-900 text-lg leading-snug mb-2 group-hover:text-[#C1121F] transition-colors line-clamp-1">
+                                                            {doc.title}
+                                                        </h3>
+                                                        {doc.description && (
+                                                            <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed mb-3">
+                                                                {doc.description}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-[11px] text-slate-400 truncate mb-1">
+                                                            파일명: {doc.file_name}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="font-medium text-slate-600">{doc.file_size}</span>
+                                                            <span>•</span>
+                                                            <span className="text-slate-400">다운로드 {doc.download_count.toLocaleString()}회</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 text-[#C1121F] font-bold text-xs group-hover:translate-x-0.5 transition-transform">
+                                                            다운로드 <FileDown size={15} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()
+                            )}
                         </div>
                     )}
+
 
                     {/* --- 3-3. 묻고 답하기 (FAQ) --- */}
                     {activeCategory === "faq" && (

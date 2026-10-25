@@ -8,3 +8,4 @@ from .notice import Notice
 from .portfolio import Portfolio
 from .inquiry import Inquiry
 from .partner import Partner
+from .download import Download

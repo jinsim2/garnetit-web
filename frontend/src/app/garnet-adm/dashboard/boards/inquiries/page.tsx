@@ -55,8 +55,6 @@ export default function InquiriesPage() {
                 }
             });
 
-            console.log(token);
-
             // 💡 [추가] 토큰 만료(401) 시 자동 로그인 페이지로 안내
             if (res.status === 401) {
                 localStorage.removeItem("admin_token");

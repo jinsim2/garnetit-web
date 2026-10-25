@@ -10,6 +10,7 @@ UPLOAD_DIR = "uploads"
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
+@router.post("", include_in_schema=False)
 @router.post("/")
 async def upload_file(file: UploadFile = File(...)):
     if not file:
