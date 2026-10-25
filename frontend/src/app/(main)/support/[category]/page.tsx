@@ -42,6 +42,17 @@ interface DownloadItem {
     created_at: string;
 }
 
+// 💡 [추가] FAQ 데이터 타입
+interface FaqItem {
+    id: number;
+    category: string;
+    question: string;
+    answer: string;
+    sort_order: number;
+    is_published: boolean;
+    created_at: string;
+}
+
 export default function SupportPage() {
     const params = useParams();
     const activeCategory = (params.category as string) || "notice";
@@ -72,12 +83,20 @@ export default function SupportPage() {
     const [downloadCategory, setDownloadCategory] = useState("전체");
     const [downloadSearch, setDownloadSearch] = useState("");
 
-    // 💡 [수정] 공지사항 및 자료실 탭이 활성화될 때 각각 DB에서 목록 불러오기
+    // 💡 [추가] FAQ 관련 State
+    const [faqs, setFaqs] = useState<FaqItem[]>([]);
+    const [isLoadingFaqs, setIsLoadingFaqs] = useState(false);
+    const [faqCategory, setFaqCategory] = useState("전체");
+    const [faqSearch, setFaqSearch] = useState("");
+
+    // 💡 [수정] 활성화된 탭(공지사항, 자료실, FAQ)에 따라 각각 DB에서 데이터 불러오기
     useEffect(() => {
         if (activeCategory === "notice") {
             fetchNotices();
         } else if (activeCategory === "download") {
             fetchDownloads();
+        } else if (activeCategory === "faq") {
+            fetchFaqs();
         }
     }, [activeCategory]);
 
@@ -147,6 +166,22 @@ export default function SupportPage() {
             document.body.removeChild(link);
         } catch (error) {
             console.error("파일 다운로드 실패:", error);
+        }
+    };
+
+    // 💡 [추가] FAQ 목록 불러오기 (공개된 항목만 조회)
+    const fetchFaqs = async () => {
+        setIsLoadingFaqs(true);
+        try {
+            const res = await fetch("/api/v1/faqs");
+            if (res.ok) {
+                const data = await res.json();
+                setFaqs(data);
+            }
+        } catch (error) {
+            console.error("FAQ 목록 로드 실패:", error);
+        } finally {
+            setIsLoadingFaqs(false);
         }
     };
 
@@ -552,36 +587,103 @@ export default function SupportPage() {
 
                     {/* --- 3-3. 묻고 답하기 (FAQ) --- */}
                     {activeCategory === "faq" && (
-                        <div className="bg-white rounded-3xl p-6 md:p-12 shadow-sm border border-slate-100">
-                            <div className="mb-8">
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">자주 묻는 질문 (FAQ)</h2>
-                                <p className="text-slate-500">고객님들께서 자주 문의하시는 내용을 모아두었습니다.</p>
+                        <div className="bg-white rounded-3xl p-6 md:p-12 shadow-sm border border-slate-100 space-y-6">
+                            {/* 헤더 & 검색창 */}
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-900 mb-1">자주 묻는 질문 (FAQ)</h2>
+                                    <p className="text-slate-500 text-sm">가넷정보기술의 솔루션과 서비스에 대해 고객님들께서 자주 문의하시는 내용을 모아두었습니다.</p>
+                                </div>
+                                <div className="relative w-full md:w-72">
+                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                    <input
+                                        type="text"
+                                        placeholder="질문 검색 (예: 유지보수, 견적)..."
+                                        value={faqSearch}
+                                        onChange={(e) => setFaqSearch(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C1121F]/20 focus:border-[#C1121F]"
+                                    />
+                                </div>
                             </div>
 
-                            {/* 아코디언 컴포넌트를 사용하여 질문/답변 구성 */}
-                            <Accordion className="w-full">
-                                {[
-                                    { q: "유지보수 계약 기간 내에 발생하는 하드웨어 고장은 무상 처리되나요?", a: "네, 맞습니다. 통합 유지보수 계약 기간 내에 발생하는 장비의 자연적 결함 및 하드웨어 고장은 당사의 전문 엔지니어가 방문하여 100% 무상으로 교체 및 수리를 진행해 드립니다. 단, 천재지변이나 사용자의 명백한 과실로 인한 파손은 실비가 청구될 수 있습니다." },
-                                    { q: "도입 전 현장 실사 및 컨설팅 비용이 발생하나요?", a: "기본적인 현장 실사와 초기 인프라 설계 컨설팅은 무상으로 제공됩니다. 귀사의 네트워크 환경과 물리적 보안 요구사항을 파악한 후 최적의 솔루션 제안서를 보내드립니다." },
-                                    { q: "타사 CCTV 및 NVR 장비와도 호환이 가능한가요?", a: "당사의 VMS 소프트웨어는 ONVIF 국제 표준 프로토콜을 완벽하게 지원하므로, 대부분의 타사 카메라 및 NVR과 원활하게 연동됩니다. 단, 특정 제조사의 독자적인 특수 기능(AI 분석 등)은 일부 기능이 제한될 수 있습니다." },
-                                    { q: "조달청(나라장터)을 통한 제품 구매가 가능한가요?", a: "네, 가능합니다. 가넷정보기술의 주요 솔루션 및 장비들은 나라장터 종합쇼핑몰에 다수 등록되어 있으며, 공공기관 고객의 경우 복잡한 계약 절차 없이 빠르고 투명하게 구매하실 수 있습니다." },
-                                ].map((faq, idx) => (
-                                    <AccordionItem key={idx} value={`item-${idx}`} className="border-b border-slate-100">
-                                        <AccordionTrigger className="text-left font-semibold text-slate-800 text-lg py-5 hover:text-[#C1121F] hover:no-underline">
-                                            <div className="flex gap-4">
-                                                <span className="text-[#C1121F] font-black">Q.</span>
-                                                {faq.q}
-                                            </div>
-                                        </AccordionTrigger>
-                                        <AccordionContent className="text-slate-600 text-base leading-relaxed bg-slate-50 p-6 rounded-xl my-2 border border-slate-100">
-                                            <div className="flex gap-4">
-                                                <span className="text-slate-400 font-black">A.</span>
-                                                {faq.a}
-                                            </div>
-                                        </AccordionContent>
-                                    </AccordionItem>
+                            {/* 카테고리 필터 버튼 탭 */}
+                            <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-100 pb-4">
+                                {["전체", "제품/기술", "도입/견적", "유지보수", "구매/계약", "기타"].map((cat) => (
+                                    <button
+                                        key={cat}
+                                        type="button"
+                                        onClick={() => setFaqCategory(cat)}
+                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${faqCategory === cat
+                                            ? "bg-[#C1121F] text-white shadow-sm"
+                                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                            }`}
+                                    >
+                                        {cat}
+                                    </button>
                                 ))}
-                            </Accordion>
+                            </div>
+
+                            {/* 아코디언 질문/답변 목록 */}
+                            {isLoadingFaqs ? (
+                                <div className="py-24 text-center">
+                                    <Loader2 className="animate-spin text-[#C1121F] mx-auto mb-3" size={32} />
+                                    <p className="text-slate-500 text-sm">FAQ 목록을 불러오는 중입니다...</p>
+                                </div>
+                            ) : (
+                                (() => {
+                                    const filteredFaqs = faqs.filter((item) => {
+                                        const matchCategory = faqCategory === "전체" || item.category === faqCategory;
+                                        const matchSearch =
+                                            item.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
+                                            item.answer.toLowerCase().includes(faqSearch.toLowerCase());
+                                        return matchCategory && matchSearch;
+                                    });
+
+                                    if (filteredFaqs.length === 0) {
+                                        return (
+                                            <div className="py-16 text-center text-slate-400">
+                                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-300">
+                                                    <HelpCircle size={32} />
+                                                </div>
+                                                <p className="font-semibold text-slate-700 mb-1">등록된 질문이 없습니다</p>
+                                                <p className="text-xs text-slate-400">
+                                                    {faqSearch || faqCategory !== "전체"
+                                                        ? "검색 조건에 일치하는 질문이 없습니다."
+                                                        : "현재 등록된 공개 질문이 없습니다."}
+                                                </p>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <Accordion className="w-full">
+                                            {filteredFaqs.map((faq) => (
+                                                <AccordionItem key={faq.id} value={`item-${faq.id}`} className="border-b border-slate-100 py-1">
+                                                    <AccordionTrigger className="text-left font-semibold text-slate-800 text-base md:text-lg py-4 hover:text-[#C1121F] hover:no-underline">
+                                                        <div className="flex items-start gap-3.5 pr-4">
+                                                            <span className="text-[#C1121F] font-black text-lg md:text-xl shrink-0">Q.</span>
+                                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                                                <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 w-fit shrink-0">
+                                                                    {faq.category}
+                                                                </span>
+                                                                <span className="leading-snug text-slate-800">{faq.question}</span>
+                                                            </div>
+                                                        </div>
+                                                    </AccordionTrigger>
+                                                    <AccordionContent className="text-slate-600 text-sm md:text-base leading-relaxed bg-slate-50/80 p-6 rounded-2xl my-2 border border-slate-100 whitespace-pre-wrap">
+                                                        <div className="flex gap-3.5">
+                                                            <span className="text-slate-400 font-black text-lg md:text-xl shrink-0">A.</span>
+                                                            <div className="flex-1 whitespace-pre-wrap leading-relaxed text-slate-700">
+                                                                {faq.answer}
+                                                            </div>
+                                                        </div>
+                                                    </AccordionContent>
+                                                </AccordionItem>
+                                            ))}
+                                        </Accordion>
+                                    );
+                                })()
+                            )}
                         </div>
                     )}
 
