@@ -67,7 +67,7 @@ def get_customer_inquiry_email_html(inquiry: Inquiry) -> str:
         <tr>
           <td style="background-color: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
             <p style="margin: 0 0 6px 0; font-size: 13px; color: #64748b;">
-              (주)가넷정보기술 | 서울특별시 영등포구 경인로 775, 에이스하이테크시티
+              (주)가넷정보기술 | 부산광역시 남구 남동천로 128 1227~1229호(문현동, 부산국제금융센터)
             </p>
             <p style="margin: 0; font-size: 12px; color: #94a3b8;">
               본 메일은 온라인 문의 접수 확인을 위해 자동 발송된 발신 전용 메일입니다.
