@@ -28,9 +28,10 @@ export default function AdminLoginPage() {
                 body: formData.toString(),
             });
 
-            // 4. 백엔드에서 401(거절) 에러를 뱉었다면?
+            // 4. 백엔드에서 401(인증 실패) 또는 403(정지된 계정) 에러를 뱉었다면?
             if (!res.ok) {
-                throw new Error("이메일이나 비밀번호가 틀렸습니다.");
+                const errData = await res.json().catch(() => null);
+                throw new Error(errData?.detail || "이메일이나 비밀번호가 틀렸습니다.");
             }
 
             // 5. 로그인 성공! 백엔드가 준 데이터를 JSON으로 푼다.

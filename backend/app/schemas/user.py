@@ -28,3 +28,15 @@ class UserResponse(UserBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# 5. Update 스키마 (최고관리자가 계정 정보를 수정할 때 - 원하는 항목만 보낼 수 있도록 Optional 처리)
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[RoleEnum] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = None  # 비밀번호를 비워두면 기존 비밀번호 유지, 입력하면 새 비밀번호로 덮어쓰기
+
+# 6. 내 비밀번호 변경 스키마 (본인 확인을 위해 현재 비밀번호 + 새 비밀번호 필수)
+class UserPasswordChange(BaseModel):
+    current_password: str
+    new_password: str

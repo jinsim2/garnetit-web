@@ -28,6 +28,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             headers={"WWW-Authenticate": "Bearer"},  # (이건 프론트엔드가 "인증 실패했다!"라는 걸 인식하게 해주는 기술적인 표시이다.)
         )
 
+    # 2-1. [추가] 비밀번호는 맞지만 정지(비활성화)된 계정인 경우 로그인을 원천 차단한다.
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="비활성화(정지)된 계정입니다. 최고관리자에게 문의하세요.",
+        )
+
     # 3. 비밀번호가 맞다면 JWT 토큰을 찍어낸다.
     access_token = create_access_token(data={"sub": user.email})
 
