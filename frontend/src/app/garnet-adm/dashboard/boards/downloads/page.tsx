@@ -116,11 +116,15 @@ export default function DownloadsManagePage() {
             const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
 
             // 백엔드 업로드 API 호출
+            const token = localStorage.getItem("admin_token");
             const uploadFormData = new FormData();
             uploadFormData.append("file", file);
 
             const res = await fetch("/api/v1/upload", {
                 method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
                 body: uploadFormData,
             });
 

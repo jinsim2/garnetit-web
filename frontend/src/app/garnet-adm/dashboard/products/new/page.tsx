@@ -115,13 +115,16 @@ export default function NewProductPage() {
         setIsSubmitting(true);
 
         try {
+            const token = localStorage.getItem('admin_token'); // 토큰 꺼내기
+
             // STEP 1: 썸네일 이미지 먼저 업로드 (URL 받아오기)
             let imageUrl = "";
             const imageFormData = new FormData();
             imageFormData.append("file", thumbnailFile);
 
-            const imageRes = await fetch("/api/v1/upload/", {
+            const imageRes = await fetch("/api/v1/upload", {
                 method: "POST",
+                headers: { Authorization: `Bearer ${token}` }, // 토큰 추가
                 body: imageFormData
             });
             const imageData = await imageRes.json();
@@ -132,8 +135,9 @@ export default function NewProductPage() {
             if (catalogFile) {
                 const catalogFormData = new FormData();
                 catalogFormData.append("file", catalogFile);
-                const catalogRes = await fetch("/api/v1/upload/", {
+                const catalogRes = await fetch("/api/v1/upload", {
                     method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },  // 토근 추가
                     body: catalogFormData
                 });
                 const catalogData = await catalogRes.json();
@@ -160,7 +164,6 @@ export default function NewProductPage() {
             };
 
             // STEP 4: 최종 포장된 JSON 데이터를 제품 등록 API로 보내기!
-            const token = localStorage.getItem('admin_token'); // 토큰 꺼내기
 
             const submitRes = await fetch("/api/v1/products/", {
                 method: "POST",

@@ -18,8 +18,8 @@ import {
 export const menuItems = [
     { name: "대시보드", path: "/garnet-adm/dashboard", icon: LayoutDashboard },
     { name: "제품 관리", path: "/garnet-adm/dashboard/products", icon: Package },
-    { name: "구축사례 관리", path: "/garnet-adm/dashboard/portfolios", icon: Briefcase },
-    { name: "파트너사 관리", path: "/garnet-adm/dashboard/partners", icon: Building2 },
+    // { name: "구축사례 관리", path: "/garnet-adm/dashboard/portfolios", icon: Briefcase },
+    // { name: "파트너사 관리", path: "/garnet-adm/dashboard/partners", icon: Building2 },
     {
         name: "게시판 관리", icon: Headset,
         subItems: [ // 서브메뉴 배열 추가!
@@ -30,13 +30,13 @@ export const menuItems = [
         ]
     },
     { name: "관리자 계정", path: "/garnet-adm/dashboard/users", icon: Users },
-    {
-        name: "환경 설정", icon: Settings,
-        subItems: [ // 서브메뉴 배열 추가!
-            { name: "일반 설정", path: "/garnet-adm/dashboard/settings/general" },
-            { name: "백업 관리", path: "/garnet-adm/dashboard/settings/backup" },
-        ]
-    },
+    // {
+    //    name: "환경 설정", icon: Settings,
+    //    subItems: [ // 서브메뉴 배열 추가!
+    //        { name: "일반 설정", path: "/garnet-adm/dashboard/settings/general" },
+    //        { name: "백업 관리", path: "/garnet-adm/dashboard/settings/backup" },
+    //    ]
+    // },
 ];
 
 export default function AdminSidebar() {
@@ -123,7 +123,7 @@ export default function AdminSidebar() {
                         <Link
                             key={item.path}
                             href={item.path}
-                            className={`flex items-center gap-3 px-3 py-3 rounded-lg transition0all duration-200 ${isActive
+                            className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 ${isActive
                                 ? "bg-[#C1121F] text-white font-medium shadow-sm shadow-red-900/20"
                                 : "hover:bg-slate-800 hover:text-white"
                                 }`}

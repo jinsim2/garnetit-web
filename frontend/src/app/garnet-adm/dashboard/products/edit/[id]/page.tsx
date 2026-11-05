@@ -159,14 +159,17 @@ export default function EditProductPage() {
         }
         setIsSubmitting(true);
         try {
+            const token = localStorage.getItem('admin_token');
+
             // STEP 1: 새로운 썸네일을 올렸을 때만 업로드, 아니면 기존 URL 재사용
             let imageUrl = existingImageUrl;
             if (thumbnailFile) {
                 const imageFormData = new FormData();
                 imageFormData.append("file", thumbnailFile);
-                const imageRes = await fetch("/api/v1/upload/", {
+                const imageRes = await fetch("/api/v1/upload", {
                     method: "POST",
-                    body: imageFormData
+                    headers: { Authorization: `Bearer ${token}` }, // 토큰 추가
+                    body: imageFormData,
                 });
                 const imageData = await imageRes.json();
                 imageUrl = imageData.url;
@@ -176,9 +179,10 @@ export default function EditProductPage() {
             if (catalogFile) {
                 const catalogFormData = new FormData();
                 catalogFormData.append("file", catalogFile);
-                const catalogRes = await fetch("/api/v1/upload/", { // 뒤에 슬래시(/) 주의
+                const catalogRes = await fetch("/api/v1/upload", { // 뒤에 슬래시(/) 주의
                     method: "POST",
-                    body: catalogFormData
+                    headers: { Authorization: `Bearer ${token}` }, // 🛡️ 토큰 추가
+                    body: catalogFormData,
                 });
                 const catalogData = await catalogRes.json();
                 catalogUrl = catalogData.url;
@@ -202,7 +206,7 @@ export default function EditProductPage() {
                 specs: specs.filter(s => s.label.trim() !== ""),
             };
             // STEP 4: 폼 전송! (나머지는 기존과 동일)
-            const token = localStorage.getItem('admin_token');
+
             const submitRes = await fetch(`/api/v1/products/${productId}`, {
                 method: "PUT",
                 headers: {
